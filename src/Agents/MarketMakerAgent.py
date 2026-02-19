@@ -15,7 +15,7 @@ class MarketMakerAgent(AgentParent):
     def step(self, timeStep, price):
 
         # Computing quotes
-        bid, ask = ( Decimal(str(price)) - self.spread / Decimal("4"),
+        bid, ask = (Decimal(str(price)) - self.spread / Decimal("4"),
         Decimal(str(price)) + self.spread / Decimal("4"))
 
         tradeNum = random.randint(1, self.maxTradeNum)
