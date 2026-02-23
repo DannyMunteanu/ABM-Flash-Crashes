@@ -9,25 +9,29 @@ class NoisyAgent(AgentParent):
 
         # Initialising the parent agent 
         AgentParent.__init__(self, name, cash, quantity)
+        
         self.tradeProbability= tradeProbability
         self.maxTradeNum= maxTradeNum
 
-    def step(self, timeStep,price):
+    def step(self, market, lob, timeTick):
 
         # The agent places a random buy or sell order with 0.5 probability
-        if random.random()>self.tradeProbability:
-            return
+        if random.random() > self.tradeProbability or market.price is None:
 
+            return
+        
         tradeNum = random.randint(1, self.maxTradeNum)
 
         # Randomly buying or selling with 0.5 probability
         if random.random()<0.5:
 
-            cost = Decimal(str(price)) * tradeNum
+            cost = Decimal(str(market.price)) * Decimal(tradeNum)
 
             if self.cash>= cost:
-                self.buy(timeStep, price, tradeNum)
+
+                lob.submitMarketOrder("buy", tradeNum, self, timeTick)
         else:
             if self.quantity>= tradeNum:
-                self.sell(timeStep,price, tradeNum)
+
+                lob.submitMarketOrder("sell", tradeNum, self, timeTick)
 

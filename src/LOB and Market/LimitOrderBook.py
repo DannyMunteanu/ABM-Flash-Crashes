@@ -36,7 +36,7 @@ class LimitOrderBook:
         self._seqNum += 1
 
         filled = self._match(order, timeTick) # try to match immediately against the opposite side
-
+        remaining = size - filled #this might be wrong
         if remaining > 0:
             order.size = remaining # unfilled portion rests in the book
             book, qtyBook = (self.bids, self.bidQty) if side == "buy" else (self.asks, self.askQty)
