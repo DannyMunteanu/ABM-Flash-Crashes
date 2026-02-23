@@ -1,0 +1,5 @@
+# Local IDE settings
+.idea
+
+# For MAC OSX
+.DS_Store
