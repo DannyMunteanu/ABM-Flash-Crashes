@@ -6,7 +6,7 @@ class Market:
         self,
         lob,
         initialFundamental=100.0,
-        fundamentalVol=0.02,
+        fundamentalVol=0.2,
         noiseStd=0.01,
         initialPrice=None   
     ):
@@ -51,15 +51,15 @@ class Market:
 
         price = None
 
-        # 1. Last trade price (most informative)
+        #Last trade price 
         if self.lob.trades:
             price = self.lob.trades[-1]["price"]
 
-        # 2. Mid price (standard estimator)
+        #Mid price 
         if price is None:
             price = self.lob.midPrice()
 
-        # 3. Best bid / ask fallback
+        #Best bid / ask fallback
         if price is None:
 
             bestBid = self.lob.bestBid()
@@ -72,22 +72,22 @@ class Market:
             elif bestAsk is not None:
                 price = float(bestAsk)
 
-        # 4. NEW: fall back to previous known price
+        #fall back to previous known price
         if price is None and self.price is not None:
             price = float(self.price)
 
-        # 5. FINAL safety fallback: fundamental value
+        #safety fallback: fundamental value
         if price is None:
             price = float(self.fundamentalPrice)
 
-        # 6. Add microstructure noise
+        #Add microstructure noise
         price += random.gauss(0, self.noiseStd)
 
-        # 7. Prevent negative price
+        #Prevent negative price
         if price <= 0:
             price = 0.01
 
-        # 8. Save price
+        #Save price
         self.price = Decimal(str(price))
         self.priceHistory.append(price)
 

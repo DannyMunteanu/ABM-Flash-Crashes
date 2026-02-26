@@ -5,28 +5,55 @@ import random
 
 class MarketMakerAgent(AgentParent):
 
-    def __init__(self, name, cash=0.0,quantity=0, spread=0.4, maxTradeNum=2):
+    def __init__(self, name, cash=0.0, quantity=0, spread=0.4, maxTradeNum=2,inventoryAim=0, inventoryCoefficient=0.001):
 
         # Initialising the parent agent
         AgentParent.__init__(self, name, cash, quantity)
-        self.spread= Decimal(str(spread))
+
+        self.spread = Decimal(str(spread))
         self.maxTradeNum = maxTradeNum
+        self._orderIdBid =None
+        self._orderIdAsk = None
+        self.inventoryAim = inventoryAim
+        self.inventoryCoefficient = Decimal(str(inventoryCoefficient))
 
-    def step(self, timeStep, price):
+    def step(self, market, lob, timeTick):
 
-        # Computing quotes
-        bid, ask = (Decimal(str(price)) - self.spread / Decimal("4"),
-        Decimal(str(price)) + self.spread / Decimal("4"))
+        # If the market price is not available the agent does nothing
+        if market.price is None:
+            return
 
-        tradeNum = random.randint(1, self.maxTradeNum)
+        # Existing quotes are cancelled prior to submitting new ones
+        for attribute in ["_orderIdBid", "_orderIdAsk"]:
 
-        # This will be removed once the market is implemented it's just a placeholder
-        if random.random() < 0.5:
-            cost = bid * Decimal(tradeNum)
+            orderId = getattr(self,attribute)
 
-            if self.cash >= cost:
-                self.buy(timeStep, float(bid), tradeNum)
+            if orderId is not None:
+                lob.cancelOrder(orderId)
+                setattr(self, attribute,None)
 
-        else:
-            if self.quantity>= tradeNum:
-                self.sell(timeStep, float(ask), tradeNum)
+        # Calculating bid/ask in relation to the market price
+        bid, ask = (Decimal(str(market.price)) -self.spread / Decimal("4"),
+        Decimal(str(market.price))+ self.spread / Decimal("4"))
+
+        # Taking inventory into consideration
+        inventoryError = Decimal(self.quantity- self.inventoryAim)
+   
+        bid -= self.inventoryCoefficient * inventoryError
+        ask -= self.inventoryCoefficient * inventoryError
+
+        # I ensure that the bids/asks are valid
+        bid = max(bid, Decimal("0.01"))
+        ask = max(ask, bid + Decimal("0.01"))
+
+
+        bidSize = random.randint(1, self.maxTradeNum)
+        askSize = random.randint(1, self.maxTradeNum)
+
+        # Submitting bid quotes
+        if self.cash >= bid * Decimal(bidSize):
+            self._orderIdBid = lob.submitLimitOrder("buy",float(bid), bidSize, self, timeTick)
+
+        # Submitting ask quotes
+        if self.quantity >= askSize:
+            self._orderIdAsk = lob.submitLimitOrder("sell", float(ask), askSize, self, timeTick)
