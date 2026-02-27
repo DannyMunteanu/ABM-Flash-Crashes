@@ -5,7 +5,7 @@ import random
 
 class MarketMakerAgent(AgentParent):
 
-    def __init__(self, name, cash=0.0, quantity=0, spread=0.4, maxTradeNum=2,inventoryAim=0, inventoryCoefficient=0.001):
+    def __init__(self, name, cash=0.0, quantity=0, spread=0.4, maxTradeNum=2,inventoryAim=0, inventoryCoefficient=0.001, inventoryCap=500):
 
         # Initialising the parent agent
         AgentParent.__init__(self, name, cash, quantity)
@@ -16,6 +16,7 @@ class MarketMakerAgent(AgentParent):
         self._orderIdAsk = None
         self.inventoryAim = inventoryAim
         self.inventoryCoefficient = Decimal(str(inventoryCoefficient))
+        self.inventoryCap = int(inventoryCap)
 
     def step(self, market, lob, timeTick):
 
@@ -33,14 +34,14 @@ class MarketMakerAgent(AgentParent):
                 setattr(self, attribute,None)
 
         # Calculating bid/ask in relation to the market price
-        bid, ask = (Decimal(str(market.price)) -self.spread / Decimal("4"),
-        Decimal(str(market.price))+ self.spread / Decimal("4"))
+        bid, ask = (Decimal(str(market.price)) -self.spread / Decimal("2"),
+        Decimal(str(market.price))+ self.spread / Decimal("2"))
 
         # Taking inventory into consideration
         inventoryError = Decimal(self.quantity- self.inventoryAim)
    
         bid -= self.inventoryCoefficient * inventoryError
-        ask -= self.inventoryCoefficient * inventoryError
+        ask += self.inventoryCoefficient * inventoryError
 
         # I ensure that the bids/asks are valid
         bid = max(bid, Decimal("0.01"))
@@ -50,8 +51,11 @@ class MarketMakerAgent(AgentParent):
         bidSize = random.randint(1, self.maxTradeNum)
         askSize = random.randint(1, self.maxTradeNum)
 
+        cappedBuySize = max(0,self.inventoryCap - self.quantity)
+        bidSize = min(bidSize, cappedBuySize)
+
         # Submitting bid quotes
-        if self.cash >= bid * Decimal(bidSize):
+        if bidSize > 0 and self.cash >= bid * Decimal(bidSize):
             self._orderIdBid = lob.submitLimitOrder("buy",float(bid), bidSize, self, timeTick)
 
         # Submitting ask quotes
