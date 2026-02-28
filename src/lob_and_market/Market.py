@@ -7,7 +7,7 @@ class Market:
         lob,
         initialFundamental=100.0,
         fundamentalVol=0.2,
-        noiseStd=0.01,
+        noiseStd=0.1,
         initialPrice=None   
     ):
         # limit order book reference

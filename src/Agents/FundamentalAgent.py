@@ -10,7 +10,7 @@ class FundamentalAgent(AgentParent):
 
     def step(self, market, lob, timeTick):
 
-        # Require valid prices
+        #sanity check
         if market.price is None:
             return
 
@@ -21,8 +21,9 @@ class FundamentalAgent(AgentParent):
         tradeSize = random.randint(1, self.maxTradeSize)
 
 
-        # BUY if undervalued
-        if marketPrice < fundamentalPrice:
+        mispricingThreshold = Decimal("0.5")  # try 0.5 or even 1.0
+
+        if marketPrice < fundamentalPrice - mispricingThreshold:
 
             cost = marketPrice * tradeSize
 
@@ -37,7 +38,7 @@ class FundamentalAgent(AgentParent):
 
 
         # SELL if overvalued
-        elif marketPrice > fundamentalPrice:
+        elif marketPrice > fundamentalPrice + mispricingThreshold:
 
             if self.quantity >= tradeSize:
 

@@ -2,10 +2,14 @@ import pandas as pd
 from decimal import Decimal
 
 class AgentParent:
-    def __init__(self, name: str, cash: float = 0.0, quantity: int = 0):
+    def __init__(self, name: str, cash: float = 0.0, quantity: int = 0, liquidationThreshold: float = 0.8):
         self._name = name
         self._cash = Decimal(str(cash))
         self._quantity = quantity
+        #margin call parameters
+        self._initialValue = None
+        self._liquidationThreshold=Decimal(str(liquidationThreshold))
+        self._isLiquidated=False
         self._history = pd.DataFrame(
             columns=[
                 "timeTick",
@@ -40,6 +44,10 @@ class AgentParent:
     def buy(self, timeTick: int, price: float, amount: int) -> None:
         decimalPrice = Decimal(str(price))
         totalCost = decimalPrice * amount
+        
+        if totalCost > self._cash:
+            return  # prevents negative cash
+        
         self._cash -= totalCost
         self._quantity += amount
         self.updateHistory(timeTick, "BUY", decimalPrice, amount)
@@ -61,3 +69,23 @@ class AgentParent:
             "quantityAfter": self._quantity
         }])
         self._history = pd.concat([self._history, newRow], ignore_index=True)
+    
+    #margincalls
+    def portfolioValue(self, marketPrice: float) -> Decimal:
+        return self._cash + Decimal(str(marketPrice)) * self._quantity
+    
+    def initializeValue(self,currentPrice: float):
+        if self._initialValue is None:
+            self._initialValue = self.portfolioValue(currentPrice)
+
+    def checkAndLiquidate(self, timeTick: int, currentPrice: float, lob=None):
+        if self._isLiquidated or self._initialValue is None:
+            return
+
+        currentValue = self.portfolioValue(currentPrice)
+
+        if currentValue < self._initialValue * self._liquidationThreshold:
+            if self._quantity > 0 and lob is not None:
+                lob.submitMarketOrder("sell", self._quantity, self, timeTick)
+
+            self._isLiquidated = True

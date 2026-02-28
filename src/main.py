@@ -5,7 +5,7 @@ from src.Agents.MarketMakerAgent import MarketMakerAgent
 from src.Agents.NoisyAgent import NoisyAgent
 from src.Agents.FundamentalAgent import FundamentalAgent
 from src.Agents.HFTAgent import HFTAgent
-
+import matplotlib.pyplot as plt
 
 def simulationRunner( 
     numTicks= 5000, 
@@ -78,13 +78,19 @@ def simulationRunner(
     for t in range(1, numTicks + 1):
         market.updateFundamental()
         market.updatePrice(t)
-
+    #this is for margincall
+        if t == 1 and market.price is not None:
+            for agent in marketMakers + allAgentsButMarketMaker:
+                agent.initializeValue(market.price)
+    #ends here-charis    
         for m in marketMakers:
             m.step(market, lob, t)
 
         for other in allAgentsButMarketMaker:
             other.step(market,lob, t)
-
+        for agent in marketMakers + allAgentsButMarketMaker:
+            agent.checkAndLiquidate(t, market.price, lob)
+        
         if printEvery and (t% printEvery == 0):
             print(
                 t,
@@ -92,6 +98,12 @@ def simulationRunner(
                 "bestBid", lob.bestBid(),
                 "bestAsk", lob.bestAsk(),
                 "totalTrades", len(lob.trades),)
-
+    plt.figure()
+    plt.plot(range(len(market.priceHistory)), market.priceHistory)
+    plt.plot(range(len(market.fundamentalHistory)), market.fundamentalHistory)
+    plt.xlabel("Time")
+    plt.ylabel("Price")
+    plt.title("Market Price and Fundamental Price Over Time")
+    plt.show()
 if __name__ == "__main__":
     simulationRunner()
