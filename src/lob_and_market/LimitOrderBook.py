@@ -52,11 +52,15 @@ class LimitOrderBook:
 
     def submitMarketOrder(self, side, size, agent, timeTick):
         self._seqNum += 1  # market orders consume a sequence slot but never rest
-
+        book, qtyBook = (self.asks, self.askQty) if side == "buy" else (self.bids, self.bidQty) # buy walks up the ask side; sell walks down the bid side
+        startLevels = len(book)
+        startQ = sum(qtyBook.values())
         remaining  = size
         totalValue = Decimal("0")
         
-        book, qtyBook = (self.asks, self.askQty) if side == "buy" else (self.bids, self.bidQty) # buy walks up the ask side; sell walks down the bid side
+       
+
+
         bestFn = min if side == "buy" else max  # bestFn - best price function, best ask = lowest; best bid = highest
 
         while remaining > 0 and book:
@@ -80,10 +84,13 @@ class LimitOrderBook:
                 del book[price]
                 del qtyBook[price]
 
+
         filled = size - remaining
 
         if remaining > 0:
-            print(f"WARNING: only filled {filled}/{size} — book exhausted (flash crash indicator)") # book ran out before order was fully filled 
+            agent1 = getattr(agent, "_name", None) or str(agent)
+            print( f"INFO: {agent1} market {side} only filled {filled}/{size} — book exhausted "
+            f"(startLevels={startLevels}, startQty={startQ}, endLevels={len(book)})") # book ran out before order was fully filled 
 
         avgPrice = totalValue / filled if filled > 0 else None
         return avgPrice, filled  # return avg execution price and qty filled

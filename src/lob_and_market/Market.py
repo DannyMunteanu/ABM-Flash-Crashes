@@ -34,7 +34,7 @@ class Market:
         self.fundamentalHistory = [float(self.fundamentalPrice)]
 
     def updateFundamental(self):
-
+        
         shock = Decimal(str(
             random.gauss(0, self.fundamentalVol)
         ))
