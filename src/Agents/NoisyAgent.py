@@ -15,7 +15,7 @@ class NoisyAgent(AgentParent):
 
     def step(self, market, lob, timeTick):
 
-        # The agent places a random buy or sell order with 0.5 probability
+        # The agent places a random buy or sell order with some probability
         if random.random() > self.tradeProbability or market.price is None:
 
             return

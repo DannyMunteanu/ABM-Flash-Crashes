@@ -5,59 +5,160 @@ import random
 
 class MarketMakerAgent(AgentParent):
 
-    def __init__(self, name, cash=0.0, quantity=0, spread=0.4, maxTradeNum=2,inventoryAim=0, inventoryCoefficient=0.001, inventoryCap=500):
+    def __init__(self,name,cash=0.0,quantity=0,spread=0.4,maxTradeNum=2,inventoryAim=0,
+        inventoryCoefficient=0.001, inventoryCap=500,movingWindowForPrices=45,
+        withdrawTicks=20,durationForWithdrawal=40,withdrawCooldownTicks=100,
+        withdrawalMinDepth= 5,inventoryPressureTicks=5,checkDepth=10):
 
-        # Initialising the parent agent
         AgentParent.__init__(self, name, cash, quantity)
 
         self.spread = Decimal(str(spread))
-        self.maxTradeNum = maxTradeNum
-        self._orderIdBid =None
-        self._orderIdAsk = None
-        self.inventoryAim = inventoryAim
+        self.maxTradeNum = int(maxTradeNum)
+        self.tickSize = Decimal("0.01")
+        self.inventoryAim= int(inventoryAim)
         self.inventoryCoefficient = Decimal(str(inventoryCoefficient))
         self.inventoryCap = int(inventoryCap)
+        self.inventoryPressureTicks = int(inventoryPressureTicks)
+        self._orderIdBid =None
+        self._orderIdAsk = None
+        self.withdrawTill = -1
+        self._nextWithdraw = 0
+        self.flag = False
+        self._prevBid= None
+        self._prevAsk = None
+        self._pricesList = []
+        self.movingWindowForPrices = int(movingWindowForPrices)
+        self.withdrawTicks= int(withdrawTicks)
+        self.durationForWithdrawal = int(durationForWithdrawal)
+        self.withdrawCooldownTicks = int(withdrawCooldownTicks)
+        self.withdrawalMinDepth= int(withdrawalMinDepth)
+        self.checkDepth = int(checkDepth)
+     
+
+    def _cancelQuotes(self, lob):
+        for attribute in ["_orderIdBid", "_orderIdAsk"]:
+            orderId = getattr(self, attribute)
+            if orderId is not None:
+                lob.cancelOrder(orderId)
+                setattr(self, attribute, None)
+
+    def _priceRounder(self, p1):
+    
+        return (p1 / self.tickSize).quantize(Decimal("1"))*self.tickSize
+
+    def _withdrawOrDont(self, currentP, lob, timeTick):
+    
+        if timeTick <self.withdrawTill:
+            if not self.flag:
+                self._cancelQuotes(lob)
+                self.flag = True
+
+            return True
+
+        self.flag = False
+
+        
+        if len(self._pricesList)!= self.movingWindowForPrices:
+
+            return False
+
+        
+        if timeTick< self._nextWithdraw:
+
+            return False
+
+        
+        threshold1 = sum(self._pricesList)/Decimal(self.movingWindowForPrices)- Decimal(self.withdrawTicks) * self.tickSize
+
+        
+        if currentP>= threshold1:
+
+            return False
+        
+        if lob.depth("buy", levels=self.checkDepth) < self.withdrawalMinDepth or lob.depth("sell", levels=self.checkDepth) < self.withdrawalMinDepth:
+
+            return False
+
+        self._cancelQuotes(lob)
+
+        
+        self.withdrawTill = timeTick+self.durationForWithdrawal
+ 
+
+        self._nextWithdraw = timeTick+ self.withdrawCooldownTicks
+        
+        self.flag = True
+
+        return True
 
     def step(self, market, lob, timeTick):
 
-        # If the market price is not available the agent does nothing
+      
         if market.price is None:
+
             return
 
-        # Existing quotes are cancelled prior to submitting new ones
-        for attribute in ["_orderIdBid", "_orderIdAsk"]:
+        currentP = Decimal(str(market.price))
 
-            orderId = getattr(self,attribute)
+        self._pricesList.append(currentP)
+        if len(self._pricesList)> self.movingWindowForPrices:
+            self._pricesList.pop(0)
 
-            if orderId is not None:
-                lob.cancelOrder(orderId)
-                setattr(self, attribute,None)
+        if self._withdrawOrDont(currentP, lob, timeTick):
 
-        # Calculating bid/ask in relation to the market price
-        bid, ask = (Decimal(str(market.price)) -self.spread / Decimal("2"),
-        Decimal(str(market.price))+ self.spread / Decimal("2"))
+            return
 
-        # Taking inventory into consideration
-        inventoryError = Decimal(self.quantity- self.inventoryAim)
-   
-        bid -= self.inventoryCoefficient * inventoryError
-        ask += self.inventoryCoefficient * inventoryError
+        bid = currentP-self.spread/Decimal("2")
+        ask = currentP+self.spread/ Decimal("2")
 
-        # I ensure that the bids/asks are valid
-        bid = max(bid, Decimal("0.01"))
-        ask = max(ask, bid + Decimal("0.01"))
+        inventoryErr = Decimal(self.quantity - self.inventoryAim)
+
+        bid -= self.inventoryCoefficient * inventoryErr
+        ask += self.inventoryCoefficient * inventoryErr
+
+        
+        if self.quantity >= self.inventoryCap - 1:
+
+            bid -= self.tickSize * Decimal(self.inventoryPressureTicks)
+
+        if self.quantity <= 1:
+
+            ask += self.tickSize * Decimal(self.inventoryPressureTicks)
+
+        bid = max(self._priceRounder(bid), self.tickSize)
+        ask = max(self._priceRounder(ask), bid + self.tickSize)
 
 
-        bidSize = random.randint(1, self.maxTradeNum)
-        askSize = random.randint(1, self.maxTradeNum)
+        if (self._prevBid == bid and self._prevAsk== ask) and (self._orderIdBid is not None or self._orderIdAsk is not None):
+            
+            return
 
-        cappedBuySize = max(0,self.inventoryCap - self.quantity)
-        bidSize = min(bidSize, cappedBuySize)
+        self._prevBid=bid
+        self._prevAsk=ask
 
-        # Submitting bid quotes
-        if bidSize > 0 and self.cash >= bid * Decimal(bidSize):
-            self._orderIdBid = lob.submitLimitOrder("buy",float(bid), bidSize, self, timeTick)
+        buyS = random.randint(1, self.maxTradeNum)
+        sellS = random.randint(1, self.maxTradeNum)
 
-        # Submitting ask quotes
-        if self.quantity >= askSize:
-            self._orderIdAsk = lob.submitLimitOrder("sell", float(ask), askSize, self, timeTick)
+        
+        buyS = min(buyS, max(0, self.inventoryCap - self.quantity))
+        sellS = min(sellS, max(0, int(self.quantity)))
+
+        oldBidId=self._orderIdBid
+        oldAskId=self._orderIdAsk
+        orderIDBidNew = None
+        orderIDAskNew = None
+
+        if buyS > 0 and self.cash >= bid * Decimal(buyS):
+            orderIDBidNew = lob.submitLimitOrder("buy", float(bid), buyS, self, timeTick)
+
+        if sellS > 0:
+            orderIDAskNew = lob.submitLimitOrder("sell", float(ask), sellS, self, timeTick)
+
+        if orderIDBidNew is not None and oldBidId is not None and oldBidId!= orderIDBidNew:
+            lob.cancelOrder(oldBidId)
+
+        if orderIDAskNew is not None and oldAskId is not None and oldAskId !=orderIDAskNew:
+            lob.cancelOrder(oldAskId)
+
+        self._orderIdBid = orderIDBidNew if orderIDBidNew is not None else oldBidId
+        self._orderIdAsk = orderIDAskNew if orderIDAskNew is not None else oldAskId
