@@ -23,12 +23,12 @@ from flash_crash_sim.Agents.HFTAgent import HFTAgent
 from flash_crash_sim.Agents.MomentumAgent import MomentumAgent
 from flash_crash_sim.Agents.StopLossAgent import StopLossAgent
 
-# ── Reactive state ─────────────────────────────────────────────────────────────
+#reactove state parameters 
 model_state  = solara.reactive(None)
 running      = solara.reactive(False)
 step_count   = solara.reactive(0)
 
-# Parameters
+# market Parameters
 n_market_maker   = solara.reactive(15)
 n_noisy          = solara.reactive(7)
 n_fundamental    = solara.reactive(3)
@@ -38,7 +38,6 @@ n_stoploss       = solara.reactive(3)
 fundamental_vol  = solara.reactive(0.2)
 mm_spread        = solara.reactive(0.7)
 crash_prob       = solara.reactive(0.002)
-
 
 def make_model():
     return FlashCrashModel(
@@ -53,9 +52,7 @@ def make_model():
         crash_prob=crash_prob.value,
     )
 
-
-# ── Colour palette ─────────────────────────────────────────────────────────────
-DARK_BG    = "#0d1117"
+#colours 
 PANEL_BG   = "#161b22"
 GRID_COL   = "#21262d"
 TEXT_COL   = "#e6edf3"
@@ -82,8 +79,7 @@ def apply_dark_style(ax, title=""):
         ax.set_title(title, color=TEXT_COL, fontsize=9, fontweight="bold", pad=6)
 
 
-# ── Chart renderers ────────────────────────────────────────────────────────────
-
+#chart rendering
 def render_price_chart(model):
     fig, axes = plt.subplots(2, 1, figsize=(7, 5), facecolor=DARK_BG)
     fig.subplots_adjust(hspace=0.35, left=0.1, right=0.97, top=0.93, bottom=0.1)
@@ -243,8 +239,7 @@ def render_agent_activity(model):
     return fig
 
 
-# ── Solara components ──────────────────────────────────────────────────────────
-
+#solara components
 @solara.component
 def ControlPanel():
     with solara.Column(style={"background": "#161b22", "borderRadius": "8px",
@@ -254,7 +249,7 @@ def ControlPanel():
                     style={"color": "#58a6ff", "fontWeight": "bold",
                            "fontSize": "16px", "marginBottom": "8px"})
 
-        # ── Run controls ───────────────────────────────────────────────
+        #run controls
         with solara.Row(style={"gap": "6px", "marginBottom": "4px", "flexWrap": "wrap"}):
             def on_reset():
                 model_state.set(make_model())
@@ -306,7 +301,7 @@ def ControlPanel():
         solara.Text(f"Step: {step_count.value}",
                     style={"color": "#8b949e", "fontSize": "12px"})
 
-        # ── Flash crash manual trigger ─────────────────────────────────
+        #manual flash crash trigger
         solara.Text("── Flash Crash ──",
                     style={"color": "#ff4500", "fontSize": "11px", "marginTop": "8px"})
 
@@ -337,7 +332,7 @@ def ControlPanel():
         solara.SliderFloat("Crash Probability", value=crash_prob,
                            min=0.0, max=0.02, step=0.001)
 
-        # ── Agent counts ───────────────────────────────────────────────
+        #agent counts
         solara.Text("── Agent Counts ──",
                     style={"color": "#8b949e", "fontSize": "11px", "marginTop": "8px"})
         solara.SliderInt("Market Makers",   value=n_market_maker, min=0, max=20)
@@ -347,7 +342,7 @@ def ControlPanel():
         solara.SliderInt("Momentum",        value=n_momentum,     min=0, max=10)
         solara.SliderInt("Stop Loss",       value=n_stoploss,     min=0, max=10)
 
-        # ── Market parameters ──────────────────────────────────────────
+        #market parameters
         solara.Text("── Market Parameters ──",
                     style={"color": "#8b949e", "fontSize": "11px", "marginTop": "8px"})
         solara.SliderFloat("Fundamental Vol", value=fundamental_vol,
@@ -355,7 +350,7 @@ def ControlPanel():
         solara.SliderFloat("MM Spread",       value=mm_spread,
                            min=0.1,  max=3.0, step=0.05)
 
-        # ── Live stats ─────────────────────────────────────────────────
+        #live statistics
         if m is not None:
             solara.Text("── Live Stats ──",
                         style={"color": "#8b949e", "fontSize": "11px", "marginTop": "8px"})

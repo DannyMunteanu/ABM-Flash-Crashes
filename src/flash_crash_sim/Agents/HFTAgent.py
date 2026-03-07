@@ -2,7 +2,6 @@ from .AgentParent import AgentParent
 from decimal import Decimal
 import random
 
-
 class HFTAgent(AgentParent):
 
     def __init__(self, name, cash=0.0, quantity=0, maxTradeNum=3, tradeProbability=1.0,

@@ -43,10 +43,9 @@ class MarketMakerAgent(AgentParent):
                 setattr(self, attribute, None)
 
     def _priceRounder(self, p1):
-    
         return (p1 / self.tickSize).quantize(Decimal("1"))*self.tickSize
 
-    def _withdrawOrDont(self, currentP, lob, timeTick):
+    def _withdrawOrDont(self, currentPrice, lob, timeTick):
     
         if timeTick <self.withdrawTill:
             if not self.flag:
@@ -54,83 +53,59 @@ class MarketMakerAgent(AgentParent):
                 self.flag = True
 
             return True
-
+        
         self.flag = False
-
         
         if len(self._pricesList)!= self.movingWindowForPrices:
-
             return False
-
         
         if timeTick< self._nextWithdraw:
-
             return False
-
         
-        threshold1 = sum(self._pricesList)/Decimal(self.movingWindowForPrices)- Decimal(self.withdrawTicks) * self.tickSize
-
-        
-        if currentP>= threshold1:
-
+        threshold1 = sum(self._pricesList)/Decimal(self.movingWindowForPrices)- Decimal(self.withdrawTicks) * self.tickSize        
+        if currentPrice>= threshold1:
             return False
         
         if lob.depth("buy", levels=self.checkDepth) < self.withdrawalMinDepth or lob.depth("sell", levels=self.checkDepth) < self.withdrawalMinDepth:
-
             return False
 
         self._cancelQuotes(lob)
-
-        
         self.withdrawTill = timeTick+self.durationForWithdrawal
- 
-
         self._nextWithdraw = timeTick+ self.withdrawCooldownTicks
-        
         self.flag = True
-
         return True
 
     def step(self, market, lob, timeTick):
-
-      
         if market.price is None:
-
             return
 
-        currentP = Decimal(str(market.price))
+        currentPrice = Decimal(str(market.price))
 
-        self._pricesList.append(currentP)
+        self._pricesList.append(currentPrice)
         if len(self._pricesList)> self.movingWindowForPrices:
             self._pricesList.pop(0)
 
-        if self._withdrawOrDont(currentP, lob, timeTick):
-
+        if self._withdrawOrDont(currentPrice, lob, timeTick):
             return
 
-        bid = currentP-self.spread/Decimal("2")
-        ask = currentP+self.spread/ Decimal("2")
+        bid = currentPrice-self.spread/Decimal("2")
+        ask = currentPrice+self.spread/ Decimal("2")
 
         inventoryErr = Decimal(self.quantity - self.inventoryAim)
 
         bid -= self.inventoryCoefficient * inventoryErr
         ask += self.inventoryCoefficient * inventoryErr
-
-        
+   
         if self.quantity >= self.inventoryCap - 1:
-
             bid -= self.tickSize * Decimal(self.inventoryPressureTicks)
 
         if self.quantity <= 1:
-
             ask += self.tickSize * Decimal(self.inventoryPressureTicks)
 
         bid = max(self._priceRounder(bid), self.tickSize)
         ask = max(self._priceRounder(ask), bid + self.tickSize)
 
-
-        if (self._prevBid == bid and self._prevAsk== ask) and (self._orderIdBid is not None or self._orderIdAsk is not None):
-            
+        if (self._prevBid == bid and self._prevAsk== ask) and (self._orderIdBid is not None or self._orderIdAsk is not None):        
             return
 
         self._prevBid=bid
@@ -139,7 +114,6 @@ class MarketMakerAgent(AgentParent):
         buyS = random.randint(1, self.maxTradeNum)
         sellS = random.randint(1, self.maxTradeNum)
 
-        
         buyS = min(buyS, max(0, self.inventoryCap - self.quantity))
         sellS = min(sellS, max(0, int(self.quantity)))
 

@@ -9,7 +9,6 @@ from Agents.HFTAgent import HFTAgent
 from Agents.MomentumAgent import MomentumAgent
 from Agents.StopLossAgent import StopLossAgent
 
-
 def simulationRunner(
         numTicks=5000,
         marketMakerAmount=15,
@@ -68,7 +67,7 @@ def simulationRunner(
         )
         for i in range(fundamentalAmount)
     ]
-    # Danny add ur agents 
+     
     HFTs = [
         HFTAgent(
             "HFT_" + str(i),
@@ -111,38 +110,23 @@ def simulationRunner(
         for i in range(stopLossAmount)
     ]
 
-    # Agents Added
     allAgentsButMarketMaker = noisyAgents + fundamentalAgents + HFTs + momentumAgents + stopLossAgents
-
     agents = marketMakers + allAgentsButMarketMaker
-
     crashDuration = 25
-
     crashProb = 0.002
-
     noCrashesForFirstNTicks = 250
-
     waitTillNextCrash = 350
-
     activeCrashTicks = 0
-
     crashCooldown = 0
-
     bidLiquidityDepthMeasure = 25
-
     shockAmount = Decimal("25")
-
     basePressure = 80
-
     maxSell = Decimal("0.98")
-
     perTickSellSweep = 6
 
     for t in range(1, numTicks + 1):
         market.updateFundamental()
-
         random.shuffle(agents)
-
         if marketMakers:
             m = agents.index(random.choice(marketMakers))
             agents[0], agents[m] = agents[m], agents[0]
@@ -169,31 +153,26 @@ def simulationRunner(
             else:
 
                 if fundamentalAgents:
-                    aggressor = random.choice(fundamentalAgents)
+                    panicSeller = random.choice(fundamentalAgents)
                 elif noisyAgents:
-                    aggressor = random.choice(noisyAgents)
+                    panicSeller = random.choice(noisyAgents)
                 else:
-                    aggressor = random.choice(agents)
+                    panicSeller = random.choice(agents)
 
                 for s in range(perTickSellSweep):
                     if lob.bestBid() is None:
                         break
-
                     bidD = lob.depth("buy", levels=bidLiquidityDepthMeasure) or 0
                     availableBidAmount = sum(lob.bidQty.values())
-
                     if availableBidAmount <= 0:
                         availableBidAmount = bidD
-
                     if availableBidAmount <= 0:
                         break
 
                     panicSize = min(int(max(basePressure, float(shockAmount) * float(bidD))),
                                     int(Decimal(availableBidAmount) * maxSell))
-
                     if panicSize > 0:
-                        lob.submitMarketOrder("sell", panicSize, aggressor, t)
-
+                        lob.submitMarketOrder("sell", panicSize, panicSeller, t)
                 activeCrashTicks -= 1
 
         market.updatePrice(t)
@@ -215,7 +194,6 @@ def simulationRunner(
                   "totalTrades",
                   len(lob.trades),
                   )
-
 
 if __name__ == "__main__":
     simulationRunner()

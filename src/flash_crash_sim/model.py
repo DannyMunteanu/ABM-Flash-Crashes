@@ -4,7 +4,7 @@ from decimal import Decimal
 import random
 import sys, os
 
-# ── Path setup so relative imports inside Agents/ and lob_and_market/ work ────
+#Path setup so relative imports inside Agents/ and lob_and_market/ work ────
 _here = os.path.dirname(os.path.abspath(__file__))
 if _here not in sys.path:
     sys.path.insert(0, os.path.dirname(_here))
@@ -19,7 +19,7 @@ from flash_crash_sim.Agents.MomentumAgent import MomentumAgent
 from flash_crash_sim.Agents.StopLossAgent import StopLossAgent
 
 
-# ── Thin Mesa wrapper so each agent is also a mesa.Agent ──────────────────────
+# Thin Mesa wrapper so each agent is also a mesa.Agent
 class MesaAgentWrapper(mesa.Agent):
     """Wraps any existing agent so Mesa can track it."""
     def __init__(self, model, inner):
@@ -30,7 +30,7 @@ class MesaAgentWrapper(mesa.Agent):
         self.inner.step(market, lob, timeTick)
 
 
-# ── Flash Crash Model ──────────────────────────────────────────────────────────
+#flash crash model
 class FlashCrashModel(mesa.Model):
 
     def __init__(
@@ -72,7 +72,7 @@ class FlashCrashModel(mesa.Model):
         self._max_sell = Decimal("0.98")
         self._per_tick_sell_sweep = 6
 
-        # ── Create inner agents ─────────────────────────────────────────
+        #Create inner agents
         self._market_makers = [
             MarketMakerAgent(
                 f"MM_{i}", cash=5000, quantity=50,
@@ -119,7 +119,7 @@ class FlashCrashModel(mesa.Model):
         for inner in self._all_inner:
             MesaAgentWrapper(model=self, inner=inner)
 
-        # ── Data Collection ─────────────────────────────────────────────
+        #Data Collection
         self.datacollector = DataCollector(
             model_reporters={
                 "MidPrice":    lambda m: m.lob.midPrice(),
@@ -135,14 +135,14 @@ class FlashCrashModel(mesa.Model):
         )
         self.datacollector.collect(self)
 
-    # ── Step ───────────────────────────────────────────────────────────────────
+    # Step 
     def step(self):
         self.timeTick += 1
         t = self.timeTick
 
         self.market.updateFundamental()
 
-        # Shuffle: market maker always gets priority (from main.py logic)
+        # Shuffle: market maker always gets priority
         agents = list(self._all_inner)
         random.shuffle(agents)
         if self._market_makers:
@@ -153,7 +153,7 @@ class FlashCrashModel(mesa.Model):
         for a in agents:
             a.step(self.market, self.lob, t)
 
-        # ── Flash crash logic (directly from main.py) ──────────────────
+        #Flash crash logic 
         if self.crash_cooldown > 0:
             self.crash_cooldown -= 1
         else:
@@ -200,7 +200,7 @@ class FlashCrashModel(mesa.Model):
         self.market.updatePrice(t)
         self.datacollector.collect(self)
 
-    # ── Helpers ────────────────────────────────────────────────────────────────
+    #Helper fns
     def get_order_book_snapshot(self, levels=10):
         bids = sorted(self.lob.bids.keys(), reverse=True)[:levels]
         asks = sorted(self.lob.asks.keys())[:levels]
