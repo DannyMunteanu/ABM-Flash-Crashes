@@ -2,21 +2,14 @@ import mesa
 from mesa import DataCollector
 from decimal import Decimal
 import random
-import sys, os
-
-#Path setup so relative imports inside Agents/ and lob_and_market/ work ────
-_here = os.path.dirname(os.path.abspath(__file__))
-if _here not in sys.path:
-    sys.path.insert(0, os.path.dirname(_here))
-
-from flash_crash_sim.lob_and_market.LimitOrderBook import LimitOrderBook
-from flash_crash_sim.lob_and_market.Market import Market
-from flash_crash_sim.Agents.MarketMakerAgent import MarketMakerAgent
-from flash_crash_sim.Agents.NoisyAgent import NoisyAgent
-from flash_crash_sim.Agents.FundamentalAgent import FundamentalAgent
-from flash_crash_sim.Agents.HFTAgent import HFTAgent
-from flash_crash_sim.Agents.MomentumAgent import MomentumAgent
-from flash_crash_sim.Agents.StopLossAgent import StopLossAgent
+from .MarketMechanism.LimitOrderBook import LimitOrderBook
+from .MarketMechanism.Market import Market
+from .Agents.MarketMakerAgent import MarketMakerAgent
+from .Agents.NoisyAgent import NoisyAgent
+from .Agents.FundamentalAgent import FundamentalAgent
+from .Agents.HighFrequencyAgent import HighFrequencyAgent
+from .Agents.MomentumAgent import MomentumAgent
+from .Agents.StopLossAgent import StopLossAgent
 
 
 # Thin Mesa wrapper so each agent is also a mesa.Agent
@@ -95,7 +88,7 @@ class FlashCrashModel(mesa.Model):
             for i in range(n_fundamental)
         ]
         self._hft = [
-            HFTAgent(f"HFT_{i}", cash=5000, quantity=5, maxTradeNum=3,
+            HighFrequencyAgent(f"HFT_{i}", cash=5000, quantity=5, maxTradeNum=3,
                      tradeProbability=1.0, inventoryCap=40, bufferBeforeReachingCap=4)
             for i in range(n_hft)
         ]

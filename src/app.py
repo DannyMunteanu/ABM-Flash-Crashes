@@ -1,43 +1,32 @@
-"""
-Flash Crash ABM — Mesa/Solara Visualisation Dashboard
-Run with:  solara run app.py
-"""
-
-import solara
 import matplotlib
+import solara
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
-import pandas as pd
 import sys, os
-import time 
 import asyncio
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from flash_crash_sim.model import FlashCrashModel
-from flash_crash_sim.Agents.MarketMakerAgent import MarketMakerAgent
-from flash_crash_sim.Agents.NoisyAgent import NoisyAgent
-from flash_crash_sim.Agents.FundamentalAgent import FundamentalAgent
-from flash_crash_sim.Agents.HFTAgent import HFTAgent
-from flash_crash_sim.Agents.MomentumAgent import MomentumAgent
-from flash_crash_sim.Agents.StopLossAgent import StopLossAgent
+from Simulation.model import FlashCrashModel
 
-#reactove state parameters 
-model_state  = solara.reactive(None)
-running      = solara.reactive(False)
-step_count   = solara.reactive(0)
+# reactove state parameters
+model_state = solara.reactive(None)
+running = solara.reactive(False)
+step_count = solara.reactive(0)
 
 # market Parameters
-n_market_maker   = solara.reactive(15)
-n_noisy          = solara.reactive(7)
-n_fundamental    = solara.reactive(3)
-n_hft            = solara.reactive(2)
-n_momentum       = solara.reactive(3)
-n_stoploss       = solara.reactive(3)
-fundamental_vol  = solara.reactive(0.2)
-mm_spread        = solara.reactive(0.7)
-crash_prob       = solara.reactive(0.002)
+n_market_maker = solara.reactive(15)
+n_noisy = solara.reactive(7)
+n_fundamental = solara.reactive(3)
+n_hft = solara.reactive(2)
+n_momentum = solara.reactive(3)
+n_stoploss = solara.reactive(3)
+fundamental_vol = solara.reactive(0.2)
+mm_spread = solara.reactive(0.7)
+crash_prob = solara.reactive(0.002)
+
 
 def make_model():
     return FlashCrashModel(
@@ -52,19 +41,21 @@ def make_model():
         crash_prob=crash_prob.value,
     )
 
-#colours 
-PANEL_BG   = "#161b22"
-GRID_COL   = "#21262d"
-TEXT_COL   = "#e6edf3"
-BID_COL    = "#2ea043"
-ASK_COL    = "#f85149"
-PRICE_COL  = "#58a6ff"
-FUND_COL   = "#d29922"
+
+# colours
+PANEL_BG = "#161b22"
+GRID_COL = "#21262d"
+TEXT_COL = "#e6edf3"
+BID_COL = "#2ea043"
+ASK_COL = "#f85149"
+PRICE_COL = "#58a6ff"
+FUND_COL = "#d29922"
 SPREAD_COL = "#bc8cff"
-TRADE_COL  = "#ff7b72"
-CRASH_COL  = "#ff4500"
-MOM_COL    = "#3fb950"
-SL_COL     = "#ffa657"
+TRADE_COL = "#ff7b72"
+CRASH_COL = "#ff4500"
+MOM_COL = "#3fb950"
+SL_COL = "#ffa657"
+DARK_BG = "#21262d"
 
 
 def apply_dark_style(ax, title=""):
@@ -79,7 +70,7 @@ def apply_dark_style(ax, title=""):
         ax.set_title(title, color=TEXT_COL, fontsize=9, fontweight="bold", pad=6)
 
 
-#chart rendering
+# chart rendering
 def render_price_chart(model):
     fig, axes = plt.subplots(2, 1, figsize=(7, 5), facecolor=DARK_BG)
     fig.subplots_adjust(hspace=0.35, left=0.1, right=0.97, top=0.93, bottom=0.1)
@@ -135,12 +126,12 @@ def render_order_book(model):
 
     if bid_data:
         bid_prices = [d["price"] for d in bid_data]
-        bid_qtys   = [d["qty"]   for d in bid_data]
+        bid_qtys = [d["qty"] for d in bid_data]
         ax.barh(bid_prices, bid_qtys, color=BID_COL, alpha=0.75, height=0.015, label="Bids")
 
     if ask_data:
         ask_prices = [d["price"] for d in ask_data]
-        ask_qtys   = [d["qty"]   for d in ask_data]
+        ask_qtys = [d["qty"] for d in ask_data]
         ax.barh(ask_prices, ask_qtys, color=ASK_COL, alpha=0.75, height=0.015, label="Asks")
 
     mid = model.lob.midPrice()
@@ -154,7 +145,7 @@ def render_order_book(model):
                      fontsize=9, fontweight="bold", pad=6)
 
     ax.set_xlabel("Quantity", color=TEXT_COL, fontsize=8)
-    ax.set_ylabel("Price",    color=TEXT_COL, fontsize=8)
+    ax.set_ylabel("Price", color=TEXT_COL, fontsize=8)
     ax.legend(facecolor=PANEL_BG, edgecolor=GRID_COL, labelcolor=TEXT_COL, fontsize=7)
     return fig
 
@@ -173,15 +164,15 @@ def render_depth_chart(model):
 
     if bid_data:
         b_prices = sorted([d["price"] for d in bid_data])
-        b_qtys   = [next(d["qty"] for d in bid_data if d["price"] == p) for p in b_prices]
-        b_cumul  = np.cumsum(b_qtys[::-1])[::-1]
+        b_qtys = [next(d["qty"] for d in bid_data if d["price"] == p) for p in b_prices]
+        b_cumul = np.cumsum(b_qtys[::-1])[::-1]
         ax.fill_between(b_prices, b_cumul, color=BID_COL, alpha=0.5, step="post")
         ax.plot(b_prices, b_cumul, color=BID_COL, linewidth=1.2, drawstyle="steps-post")
 
     if ask_data:
         a_prices = sorted([d["price"] for d in ask_data])
-        a_qtys   = [next(d["qty"] for d in ask_data if d["price"] == p) for p in a_prices]
-        a_cumul  = np.cumsum(a_qtys)
+        a_qtys = [next(d["qty"] for d in ask_data if d["price"] == p) for p in a_prices]
+        a_cumul = np.cumsum(a_qtys)
         ax.fill_between(a_prices, a_cumul, color=ASK_COL, alpha=0.5, step="post")
         ax.plot(a_prices, a_cumul, color=ASK_COL, linewidth=1.2, drawstyle="steps-post")
 
@@ -239,17 +230,17 @@ def render_agent_activity(model):
     return fig
 
 
-#solara components
+# solara components
 @solara.component
 def ControlPanel():
     with solara.Column(style={"background": "#161b22", "borderRadius": "8px",
-                               "padding": "16px", "gap": "8px"}):
+                              "padding": "16px", "gap": "8px"}):
 
         solara.Text("⚡ Flash Crash ABM",
                     style={"color": "#58a6ff", "fontWeight": "bold",
                            "fontSize": "16px", "marginBottom": "8px"})
 
-        #run controls
+        # run controls
         with solara.Row(style={"gap": "6px", "marginBottom": "4px", "flexWrap": "wrap"}):
             def on_reset():
                 model_state.set(make_model())
@@ -282,7 +273,7 @@ def ControlPanel():
             solara.Button("↺ Reset", on_click=on_reset,
                           style={"background": "#21262d", "color": "#e6edf3",
                                  "border": "1px solid #30363d", "borderRadius": "6px"})
-            solara.Button("+1",  on_click=on_step,
+            solara.Button("+1", on_click=on_step,
                           style={"background": "#21262d", "color": "#e6edf3",
                                  "border": "1px solid #30363d", "borderRadius": "6px"})
             solara.Button("+10", on_click=on_step10,
@@ -301,7 +292,7 @@ def ControlPanel():
         solara.Text(f"Step: {step_count.value}",
                     style={"color": "#8b949e", "fontSize": "12px"})
 
-        #manual flash crash trigger
+        # manual flash crash trigger
         solara.Text("── Flash Crash ──",
                     style={"color": "#ff4500", "fontSize": "11px", "marginTop": "8px"})
 
@@ -332,46 +323,46 @@ def ControlPanel():
         solara.SliderFloat("Crash Probability", value=crash_prob,
                            min=0.0, max=0.02, step=0.001)
 
-        #agent counts
+        # agent counts
         solara.Text("── Agent Counts ──",
                     style={"color": "#8b949e", "fontSize": "11px", "marginTop": "8px"})
-        solara.SliderInt("Market Makers",   value=n_market_maker, min=0, max=20)
-        solara.SliderInt("Noisy Agents",    value=n_noisy,        min=0, max=20)
-        solara.SliderInt("Fundamental",     value=n_fundamental,  min=0, max=10)
-        solara.SliderInt("HFT Agents",      value=n_hft,          min=0, max=10)
-        solara.SliderInt("Momentum",        value=n_momentum,     min=0, max=10)
-        solara.SliderInt("Stop Loss",       value=n_stoploss,     min=0, max=10)
+        solara.SliderInt("Market Makers", value=n_market_maker, min=0, max=20)
+        solara.SliderInt("Noisy Agents", value=n_noisy, min=0, max=20)
+        solara.SliderInt("Fundamental", value=n_fundamental, min=0, max=10)
+        solara.SliderInt("HFT Agents", value=n_hft, min=0, max=10)
+        solara.SliderInt("Momentum", value=n_momentum, min=0, max=10)
+        solara.SliderInt("Stop Loss", value=n_stoploss, min=0, max=10)
 
-        #market parameters
+        # market parameters
         solara.Text("── Market Parameters ──",
                     style={"color": "#8b949e", "fontSize": "11px", "marginTop": "8px"})
         solara.SliderFloat("Fundamental Vol", value=fundamental_vol,
                            min=0.01, max=2.0, step=0.01)
-        solara.SliderFloat("MM Spread",       value=mm_spread,
-                           min=0.1,  max=3.0, step=0.05)
+        solara.SliderFloat("MM Spread", value=mm_spread,
+                           min=0.1, max=3.0, step=0.05)
 
-        #live statistics
+        # live statistics
         if m is not None:
             solara.Text("── Live Stats ──",
                         style={"color": "#8b949e", "fontSize": "11px", "marginTop": "8px"})
-            mid    = m.lob.midPrice()
+            mid = m.lob.midPrice()
             spread = m.lob.spread()
-            fund   = float(m.market.fundamentalPrice)
+            fund = float(m.market.fundamentalPrice)
             trades = len(m.lob.trades)
-            stats  = [
-                ("Mid Price",    f"{mid:.2f}"    if mid    else "—"),
-                ("Fundamental",  f"{fund:.2f}"),
-                ("Spread",       f"{spread:.4f}" if spread else "—"),
+            stats = [
+                ("Mid Price", f"{mid:.2f}" if mid else "—"),
+                ("Fundamental", f"{fund:.2f}"),
+                ("Spread", f"{spread:.4f}" if spread else "—"),
                 ("Total Trades", str(trades)),
-                ("Bid Depth",    str(m.lob.depth("buy",  10))),
-                ("Ask Depth",    str(m.lob.depth("sell", 10))),
+                ("Bid Depth", str(m.lob.depth("buy", 10))),
+                ("Ask Depth", str(m.lob.depth("sell", 10))),
                 ("Crash Events", str(len(m.crash_events))),
             ]
             for label, val in stats:
                 with solara.Row(style={"justifyContent": "space-between"}):
                     solara.Text(label, style={"color": "#8b949e", "fontSize": "11px"})
-                    solara.Text(val,   style={"color": "#e6edf3", "fontSize": "11px",
-                                              "fontWeight": "bold"})
+                    solara.Text(val, style={"color": "#e6edf3", "fontSize": "11px",
+                                            "fontWeight": "bold"})
 
 
 @solara.component
@@ -379,7 +370,7 @@ def ChartPanel():
     m = model_state.value
     if m is None:
         with solara.Column(style={"alignItems": "center", "justifyContent": "center",
-                                   "height": "400px"}):
+                                  "height": "400px"}):
             solara.Text("Click ↺ Reset to initialise the model",
                         style={"color": "#8b949e", "fontSize": "14px"})
         return
@@ -424,15 +415,15 @@ def Page():
     solara.lab.use_task(auto_stepper, dependencies=[])
 
     with solara.Row(style={"background": "#161b22", "borderBottom": "1px solid #21262d",
-                            "padding": "12px 24px", "alignItems": "center", "gap": "12px"}):
+                           "padding": "12px 24px", "alignItems": "center", "gap": "12px"}):
         solara.Text("📈 Flash Crash ABM Simulator",
                     style={"color": "#e6edf3", "fontWeight": "bold", "fontSize": "18px"})
         solara.Text("Mesa + Solara  ·  with Manual Crash Trigger",
                     style={"color": "#8b949e", "fontSize": "13px"})
 
     with solara.Row(style={"padding": "16px", "gap": "16px", "alignItems": "flex-start",
-                            "background": "#0d1117",
-                            "minHeight": "calc(100vh - 60px)"}):
+                           "background": "#0d1117",
+                           "minHeight": "calc(100vh - 60px)"}):
         with solara.Column(style={"width": "270px", "flexShrink": "0"}):
             ControlPanel()
         with solara.Column(style={"flex": "1", "minWidth": "0"}):
