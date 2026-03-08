@@ -163,7 +163,7 @@ def simulationRunner(
                     if lob.bestBid() is None:
                         break
                     bidD = lob.depth("buy", levels=bidLiquidityDepthMeasure) or 0
-                    availableBidAmount = sum(lob.bidQty.values())
+                    availableBidAmount = sum(lob.bidQuantity.values())
                     if availableBidAmount <= 0:
                         availableBidAmount = bidD
                     if availableBidAmount <= 0:
