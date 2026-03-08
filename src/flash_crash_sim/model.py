@@ -173,11 +173,11 @@ class FlashCrashModel(mesa.Model):
                 self.active_crash_ticks = 0
             else:
                 if self._fundamental:
-                    aggressor = random.choice(self._fundamental)
+                    panicSeller = random.choice(self._fundamental)
                 elif self._noisy:
-                    aggressor = random.choice(self._noisy)
+                    panicSeller = random.choice(self._noisy)
                 else:
-                    aggressor = random.choice(self._all_inner)
+                    panicSeller = random.choice(self._all_inner)
 
                 for _ in range(self._per_tick_sell_sweep):
                     if self.lob.bestBid() is None:
@@ -193,7 +193,7 @@ class FlashCrashModel(mesa.Model):
                         int(Decimal(available) * self._max_sell),
                     )
                     if panic_size > 0:
-                        self.lob.submitMarketOrder("sell", panic_size, aggressor, t)
+                        self.lob.submitMarketOrder("sell", panic_size, panicSeller, t)
 
                 self.active_crash_ticks -= 1
 
