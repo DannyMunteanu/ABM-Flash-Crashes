@@ -1,7 +1,7 @@
 from decimal import Decimal
 from .AgentParent import AgentParent
-from ..MarketMechanism.LimitOrderBook import LimitOrderBook
-from ..MarketMechanism.Market import Market
+from ..Market.LimitOrderBook import LimitOrderBook
+from ..Market.Market import Market
 
 
 class StopLossAgent(AgentParent):
