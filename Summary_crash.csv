@@ -1,0 +1,6 @@
+Simulation,Mean Crash Severity (%),Median Crash Severity (%),STD Dev: Mean Crash Severity
+Baseline Model,9.9,9.74,0.7
+Baseline Model with HFT,9.87,9.88,0.92
+Baseline Model with Momentum,10.34,10.15,1.21
+Baseline Model with Stop-Loss,7.35,7.32,2.45
+Full Market,7.47,7.88,2.71
