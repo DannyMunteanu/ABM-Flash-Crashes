@@ -74,8 +74,9 @@ class HighFrequencyAgent(AgentParent):
         sellSize = min(tradeNum, int(self.quantity))
         if sellSize > 0:
             logOrderBook.submitMarketOrder("sell", sellSize, self, timeTick)
-        self._cancelQuotes(logOrderBook)
-        return True
+            self._cancelQuotes(logOrderBook)
+            return True
+        return False
 
     def _calculateBidAsk(self, midPrice):
         """
@@ -110,14 +111,10 @@ class HighFrequencyAgent(AgentParent):
             askSize: Quantity of the ask order.
             timeTick: Current point in time for the simulation.
         """
-        if bidSize > 0 and self.cash >= bid * Decimal(bidSize):
-            self._orderIdBid = logOrderBook.submitLimitOrder(
-                "buy", float(bid), bidSize, self, timeTick
-            )
+        if bidSize > 0 and Decimal(str(self._cash)) >= bid * Decimal(bidSize):
+            self._orderIdBid = logOrderBook.submitLimitOrder("buy", bid, bidSize, self, timeTick)
         if askSize > 0:
-            self._orderIdAsk = logOrderBook.submitLimitOrder(
-                "sell", float(ask), askSize, self, timeTick
-            )
+            self._orderIdAsk = logOrderBook.submitLimitOrder("sell", ask, askSize, self, timeTick)
 
     def step(self, market, logOrderBook, timeTick):
         """

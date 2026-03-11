@@ -12,6 +12,7 @@ class MarketMakerAgent(AgentParent):
     Continuously places bid and ask limit orders around the market price while adjusting quotes based on inventory.
     MarketMakerAgent may temporarily withdraw from the market during periods of price decline and low order book depth.
     """
+
     def __init__(
             self,
             name: str,
@@ -70,7 +71,7 @@ class MarketMakerAgent(AgentParent):
         self._pricesList: list[Decimal] = []
         self.withdrawTill: int = -1
         self._nextWithdraw: int = 0
-        self.flag: bool = False
+        self._withdrawalCancelledQuotes: bool = False
 
     def _cancelQuotes(self, limitOrderBook: LimitOrderBook) -> None:
         """
@@ -104,11 +105,11 @@ class MarketMakerAgent(AgentParent):
            timeTick: Current point in time for the simulation.
         """
         if timeTick < self.withdrawTill:
-            if not self.flag:
+            if not self._withdrawalCancelledQuotes:
                 self._cancelQuotes(limitOrderBook)
-                self.flag = True
+                self._withdrawalCancelledQuotes = True
             return True
-        self.flag = False
+        self._withdrawalCancelledQuotes = False
         if len(self._pricesList) != self.movingWindowForPrices or timeTick < self._nextWithdraw:
             return False
         averagePrice = sum(self._pricesList) / Decimal(self.movingWindowForPrices)
@@ -121,7 +122,7 @@ class MarketMakerAgent(AgentParent):
         self._cancelQuotes(limitOrderBook)
         self.withdrawTill = timeTick + self.durationForWithdrawal
         self._nextWithdraw = timeTick + self.withdrawCooldownTicks
-        self.flag = True
+        self._withdrawalCancelledQuotes = True
         return True
 
     def _computeBidAsk(self, currentPrice: Decimal) -> tuple[Decimal, Decimal]:
@@ -139,7 +140,7 @@ class MarketMakerAgent(AgentParent):
         ask += self.inventoryCoefficient * inventoryErr
         if self.quantity >= self.inventoryCap - 1:
             bid -= self.tickSize * Decimal(self.inventoryPressureTicks)
-        if self.quantity <= 1:
+        if self.quantity <= 0:
             ask += self.tickSize * Decimal(self.inventoryPressureTicks)
         bid = max(self._priceRounder(bid), self.tickSize)
         ask = max(self._priceRounder(ask), bid + self.tickSize)
@@ -168,7 +169,7 @@ class MarketMakerAgent(AgentParent):
     ) -> None:
         """
         Submits bid and ask limit orders to the order book.
-        Existing orders are replaced if new quotes are submitted.
+        Old orders are cancelled before new quotes are submitted to prevent brief coexistence on the book.
         Parameters:
             limitOrderBook: Instance of LimitOrderBook used to submit orders.
             bid: Price of the bid order.
@@ -177,20 +178,11 @@ class MarketMakerAgent(AgentParent):
             sellSize: Quantity of the sell order.
             timeTick: Current point in time for the simulation.
         """
-        oldBidId = self._orderIdBid
-        oldAskId = self._orderIdAsk
-        orderIdBidNew: Optional[int] = None
-        orderIdAskNew: Optional[int] = None
-        if buySize > 0 and self.cash >= bid * Decimal(buySize):
-            orderIdBidNew = limitOrderBook.submitLimitOrder("buy", float(bid), buySize, self, timeTick)
+        self._cancelQuotes(limitOrderBook)
+        if buySize > 0 and Decimal(str(self._cash)) >= bid * Decimal(buySize):
+            self._orderIdBid = limitOrderBook.submitLimitOrder("buy", bid, buySize, self, timeTick)
         if sellSize > 0:
-            orderIdAskNew = limitOrderBook.submitLimitOrder("sell", float(ask), sellSize, self, timeTick)
-        if orderIdBidNew and oldBidId and oldBidId != orderIdBidNew:
-            limitOrderBook.cancelOrder(oldBidId)
-        if orderIdAskNew and oldAskId and oldAskId != orderIdAskNew:
-            limitOrderBook.cancelOrder(oldAskId)
-        self._orderIdBid = orderIdBidNew or oldBidId
-        self._orderIdAsk = orderIdAskNew or oldAskId
+            self._orderIdAsk = limitOrderBook.submitLimitOrder("sell", ask, sellSize, self, timeTick)
 
     def step(self, market: Market, limitOrderBook: LimitOrderBook, timeTick: int) -> None:
         """
@@ -215,5 +207,4 @@ class MarketMakerAgent(AgentParent):
         self._prevBid = bid
         self._prevAsk = ask
         buySize, sellSize = self._computeOrderSizes()
-        self._cancelQuotes(limitOrderBook)
         self._submitOrders(limitOrderBook, bid, ask, buySize, sellSize, timeTick)

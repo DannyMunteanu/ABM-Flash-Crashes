@@ -40,7 +40,7 @@ class NoisyAgent(AgentParent):
         tradeNum = random.randint(1, self.maxTradeNum)
         if random.random() < 0.5:
             cost = Decimal(str(market.price)) * Decimal(tradeNum)
-            if self.cash >= cost:
+            if Decimal(str(self._cash)) >= cost:
                 limitOrderBook.submitMarketOrder("buy", tradeNum, self, timeTick)
         else:
             if self.quantity >= tradeNum:

@@ -98,25 +98,25 @@ class MomentumAgent(AgentParent):
     def _computeTradeSize(self, signal: str) -> int:
         """
         Computes the allowed trade size based on signal and current position.
-        Returns the adjusted trade size. The size is 0 if position limits reached.
+        Returns the adjusted trade size. The size is 0 if position limits are reached.
         """
         if signal == "buy":
             return min(self.tradeSize, self.maxPosition - self._quantity)
-        else:  # sell
-            return min(self.tradeSize, self.maxPosition + self._quantity)
+        else:
+            return min(self.tradeSize, self._quantity)
 
-    def _canAfford(self, limitOrderBook: LimitOrderBook, size: int) -> bool:
+    def _computeAffordableSize(self, limitOrderBook: LimitOrderBook, size: int) -> int:
         """
-        Checks if the agent has enough cash to execute a buy order.
-        Adjusts size if necessary and returns False if order cannot be placed.
+        Returns the largest quantity the agent can afford to buy at the current best ask.
+        Returns 0 if there is no ask or the agent has insufficient cash.
         """
         bestAsk = limitOrderBook.bestAsk()
         if bestAsk is None:
-            return False
+            return 0
+        bestAsk = Decimal(str(bestAsk))
         if self._cash < bestAsk * size:
-            size = int(self._cash / bestAsk)
-            return size > 0
-        return True
+            size = int(Decimal(str(self._cash)) / bestAsk)
+        return size
 
     def _executeTrade(self, signal: str, size: int, limitOrderBook: LimitOrderBook, timeTick: int) -> None:
         """
@@ -143,6 +143,8 @@ class MomentumAgent(AgentParent):
         size = self._computeTradeSize(signal)
         if size <= 0:
             return
-        if signal == "buy" and not self._canAfford(limitOrderBook, size):
-            return
+        if signal == "buy":
+            size = self._computeAffordableSize(limitOrderBook, size)
+            if size <= 0:
+                return
         self._executeTrade(signal, size, limitOrderBook, timeTick)

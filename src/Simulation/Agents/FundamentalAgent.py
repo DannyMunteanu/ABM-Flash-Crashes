@@ -46,7 +46,7 @@ class FundamentalAgent(AgentParent):
         marketPrice = Decimal(str(market.price))
         fundamentalPrice = market.fundamentalPrice
         tradeSize = random.randint(1, self._maxTradeSize)
-        if marketPrice < fundamentalPrice and self.cash >= marketPrice * tradeSize:
+        if marketPrice < fundamentalPrice and Decimal(str(self._cash)) >= marketPrice * tradeSize:
             logOrderBook.submitMarketOrder("buy", tradeSize, self, timeTick)
         elif marketPrice > fundamentalPrice and self.quantity >= tradeSize:
             logOrderBook.submitMarketOrder("sell", tradeSize, self, timeTick)
