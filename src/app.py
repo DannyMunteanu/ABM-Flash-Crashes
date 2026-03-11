@@ -5,320 +5,747 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
-import sys, os, asyncio
+import pandas as pd
+import asyncio
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from Simulation.model import FlashCrashModel
+from Simulation.Mesa.FlashCrashModel import FlashCrashModel
 
-# ── Reactive state ─────────────────────────────────────────────────────────────
-model_state     = solara.reactive(None)
-running         = solara.reactive(False)
-step_count      = solara.reactive(0)
-n_market_maker  = solara.reactive(15)
-n_noisy         = solara.reactive(7)
-n_fundamental   = solara.reactive(3)
-n_hft           = solara.reactive(2)
-n_momentum      = solara.reactive(3)
-n_stoploss      = solara.reactive(3)
-fundamental_vol = solara.reactive(0.2)
-mm_spread       = solara.reactive(0.7)
-crash_prob      = solara.reactive(0.002)
+modelState = solara.reactive(None)
+running = solara.reactive(False)
+stepCount = solara.reactive(0)
+marketMakerCount = solara.reactive(15)
+noisyCount = solara.reactive(7)
+fundamentalCount = solara.reactive(3)
+highFrequencyCount = solara.reactive(2)
+momentumCount = solara.reactive(3)
+stopLossCount = solara.reactive(3)
+fundamentalVolatilityAmount = solara.reactive(0.2)
+marketMakerSpreadAmount = solara.reactive(0.7)
+crashProbabilityAmount = solara.reactive(0.002)
 
-def make_model():
+
+def makeModel():
     return FlashCrashModel(
-        n_market_maker=n_market_maker.value, n_noisy=n_noisy.value,
-        n_fundamental=n_fundamental.value,   n_hft=n_hft.value,
-        n_momentum=n_momentum.value,         n_stoploss=n_stoploss.value,
-        fundamental_vol=fundamental_vol.value, mm_spread=mm_spread.value,
-        crash_prob=crash_prob.value,
+        numberOfMarketMakerAgents=marketMakerCount.value,
+        numberOfNoisyAgents=noisyCount.value,
+        numberOfFundamentalAgents=fundamentalCount.value,
+        numberOfHighFrequencyAgents=highFrequencyCount.value,
+        numberOfMomentumAgents=momentumCount.value,
+        numberOfStopLossAgents=stopLossCount.value,
+        fundamentalVolatility=fundamentalVolatilityAmount.value,
+        marketMakerSpread=marketMakerSpreadAmount.value,
+        crashProbability=crashProbabilityAmount.value,
     )
 
-# ── Colour palette (light theme) ───────────────────────────────────────────────
-BG     = "#f5f5f5"
-PANEL  = "#ffffff"
-GRID   = "#e0e0e0"
-TEXT   = "#212121"
-MUTED  = "#757575"
-BID    = "#2e7d32"
-ASK    = "#c62828"
-PRICE  = "#1565c0"
-FUND   = "#e65100"
-SPREAD = "#6a1b9a"
-TRADE  = "#00838f"
-CRASH  = "#d32f2f"
 
-CSS = f"""
-    body {{ background: {BG}; margin: 0; font-family: 'Roboto', sans-serif; font-size: 11px; }}
-    .panel {{ background: {PANEL}; border-radius: 8px; padding: 16px; border: 1px solid {GRID}; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-    .btn   {{ background: #1976d2; color: #ffffff; border: none; border-radius: 4px; }}
-    .btn-run   {{ background: #1976d2; color: #ffffff; border-radius: 4px; width: 100%; }}
-    .btn-run.paused {{ background: #1565c0; }}
-    .btn-crash {{ background: #fff3e0; color: #c62828; border: 1px solid #ef9a9a; border-radius: 4px; font-weight: bold; }}
-    .btn-crash.active {{ background: #ffebee; }}
-    .section-label {{ color: {MUTED}; margin-top: 8px; }}
-    .crash-label   {{ color: {CRASH}; margin-top: 8px; }}
-    .stat-label    {{ color: {MUTED}; }}
-    .stat-value    {{ color: #424242; font-weight: bold; }}
-    .header-title  {{ color: #ffffff; font-weight: bold; font-size: 18px; }}
-    .header-sub    {{ color: #bbdefb; font-size: 13px; }}
-    .panel-title   {{ color: #1565c0; font-weight: bold; font-size: 16px; margin-bottom: 8px; }}
-    .step-counter  {{ color: {MUTED}; }}
-    .v-label {{ color: #616161 !important; font-size: 11px !important; }}
-    .v-input__slot label {{ color: #616161 !important; }}
+bg = "#0f1117"
+surface = "#1a1f2e"
+surfaceAlt = "#222840"
+border = "#2e3550"
+text = "#f0f4ff"
+muted = "#c8d0e8"  # brighter muted — more readable on dark bg
+accent = "#4f9eff"
+bidColor = "#34c97a"
+askColor = "#f05c5c"
+priceColor = "#4f9eff"
+fundColor = "#ffb347"
+spreadColor = "#b07fff"
+tradeColor = "#2edfa3"
+crashColor = "#ff6b6b"
+cooldownColor = "#c0614a"  # distinct muted red for cooldown state
+volumeColor = "#f0c040"
+gridColor = "#ffffff"  # white grid lines
+tickColor = "#e0e6f5"  # near-white tick labels
+
+WINDOW = 200
+
+css = f"""
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+body {{
+    background: {bg};
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    color: {text};
+    overflow: hidden;
+    height: 100vh;
+}}
+
+/* Kill any Vuetify white surfaces */
+.v-application,
+.v-application--wrap,
+.v-main,
+.v-main__wrap,
+.v-sheet,
+.theme--light.v-application {{
+    background: {bg} !important;
+    background-color: {bg} !important;
+    color: {text} !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}}
+
+html, body, #app, #app > div, .v-application > div {{
+    background: {bg} !important;
+    background-color: {bg} !important;
+}}
+
+.v-card, .v-list, .v-toolbar {{
+    background: {surface} !important;
+    color: {text} !important;
+}}
+
+.v-application--wrap > div,
+.v-main__wrap > div,
+.v-main__wrap > div > div {{
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+}}
+
+.v-application--wrap > div > .col,
+.v-application--wrap > .col {{
+    padding: 0 !important;
+    gap: 0 !important;
+}}
+
+.row {{ margin: 0 !important; }}
+.col  {{ padding: 0 !important; }}
+
+/* ── Header ── */
+.dash-header {{
+    background: {surface} !important;
+    border-bottom: 1px solid {border};
+    padding: 0 20px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    align-items: center !important;
+    gap: 20px !important;
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden;
+}}
+
+.header-title {{
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: {text} !important;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}}
+
+.header-badge {{
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 10px !important;
+    color: {accent} !important;
+    background: rgba(79,158,255,0.12) !important;
+    border: 1px solid rgba(79,158,255,0.3) !important;
+    border-radius: 3px;
+    padding: 2px 8px !important;
+    white-space: nowrap;
+}}
+
+.stat-block {{
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    border-left: 1px solid {border} !important;
+    padding-left: 14px !important;
+    flex-shrink: 0;
+    background: {surface} !important;
+}}
+
+.stat-label {{
+    font-size: 9px !important;
+    color: {muted} !important;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 500 !important;
+    background: {surface} !important;
+}}
+
+.stat-value {{
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: {text} !important;
+    background: {surface} !important;
+}}
+
+/* ── Sidebar ── */
+.dash-sidebar {{
+    width: 240px !important;
+    min-width: 240px !important;
+    max-width: 240px !important;
+    flex-shrink: 0 !important;
+    background: {surface} !important;
+    border-right: 1px solid {border} !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 12px 10px !important;
+    height: calc(100vh - 48px) !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+}}
+
+.dash-sidebar::-webkit-scrollbar {{ width: 3px; }}
+.dash-sidebar::-webkit-scrollbar-thumb {{ background: {border}; border-radius: 2px; }}
+
+.dash-sidebar .v-label,
+.dash-sidebar label,
+.dash-sidebar .v-input__slot label {{
+    color: {text} !important;
+    font-size: 10px !important;
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}}
+
+.dash-sidebar .v-slider__thumb,
+.dash-sidebar .v-slider__track-fill {{ background-color: {accent} !important; }}
+
+.sidebar-section {{
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: {accent} !important;
+    padding: 10px 2px 3px !important;
+    border-top: 1px solid {border} !important;
+    margin-top: 4px !important;
+}}
+
+/* ── Buttons ── */
+.btn {{
+    background: {surface} !important;
+    color: {text} !important;
+    border: 1px solid {border} !important;
+    border-radius: 4px !important;
+    padding: 4px 10px !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+}}
+
+.btn-step {{
+    background: {surface} !important;
+    color: {text} !important;
+    border: 1px solid {border} !important;
+    border-radius: 4px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 5px 0 !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+}}
+
+.btn-step-row {{
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+}}
+
+.btn-primary {{
+    background: {accent} !important;
+    color: #0a0e1a !important;
+    border: none !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    padding: 7px 0 !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+}}
+
+/* Active crash — bright red */
+.btn-danger,
+.btn-danger.v-btn,
+.v-btn.btn-danger {{
+    background: #5c1a1a !important;
+    background-color: #5c1a1a !important;
+    color: {askColor} !important;
+    border: 1px solid #c03030 !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    padding: 5px 0 !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+}}
+
+.btn-danger .v-btn__content,
+.v-btn.btn-danger .v-btn__content {{ color: {askColor} !important; background: transparent !important; }}
+.btn-danger::before, .v-btn.btn-danger::before {{ background: transparent !important; opacity: 0 !important; }}
+
+/* Cooldown state — muted earthy red, visually distinct */
+.btn-cooldown,
+.btn-cooldown.v-btn,
+.btn-cooldown .v-btn,
+.v-btn.btn-cooldown {{
+    background: #5a2a20 !important;
+    background-color: #5a2a20 !important;
+    color: #e8957a !important;
+    border: 1px solid #a04030 !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+    padding: 5px 0 !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+}}
+
+.btn-cooldown .v-btn__content,
+.v-btn.btn-cooldown .v-btn__content {{
+    color: #e8957a !important;
+    background: transparent !important;
+}}
+
+/* Also override the before/after pseudo overlays Vuetify uses */
+.btn-cooldown::before,
+.v-btn.btn-cooldown::before {{
+    background: transparent !important;
+    opacity: 0 !important;
+}}
+
+/* ── Chart area rows/cols ── */
+.chart-col {{
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    height: calc(100vh - 48px) !important;
+    overflow: hidden !important;
+}}
+
+.chart-row {{
+    flex: 1 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    overflow: hidden !important;
+    border-bottom: 1px solid {border} !important;
+}}
+
+.chart-row:last-child {{ border-bottom: none !important; }}
+
+.chart-cell {{
+    flex: 1 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border-right: 1px solid {border} !important;
+}}
+
+.chart-cell:last-child {{ border-right: none !important; }}
+
+.chart-cell .v-responsive,
+.chart-cell canvas,
+.chart-cell img,
+.chart-cell .v-image__image {{
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: fill !important;
+    display: block !important;
+}}
+
+.chart-cell > div,
+.chart-cell > div > div {{
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex: 1 !important;
+}}
 """
 
-# ── Chart helpers ──────────────────────────────────────────────────────────────
-def _style_ax(ax, title=""):
-    ax.set_facecolor(BG)
-    ax.tick_params(colors=TEXT, labelsize=8)
-    ax.xaxis.label.set_color(TEXT)
-    ax.yaxis.label.set_color(TEXT)
+
+def getDataFrame(model):
+    dataCollection = model.dataCollector.model_vars
+    minLength = None
+    for value in dataCollection.values():
+        if minLength is None or len(value) < minLength:
+            minLength = len(value)
+    safe = {key: value[:minLength] for key, value in dataCollection.items()}
+    return pd.DataFrame(safe)
+
+
+def styleAx(ax, title=""):
+    ax.set_facecolor(bg)
+    ax.tick_params(colors=tickColor, labelsize=7)
+    ax.xaxis.label.set_color(tickColor)
+    ax.yaxis.label.set_color(tickColor)
     for sp in ax.spines.values():
-        sp.set_edgecolor(GRID)
-    ax.grid(True, color=GRID, linewidth=0.5, alpha=0.7)
+        sp.set_edgecolor("#4a5270")  # slightly lighter spine for contrast
+    ax.grid(True, color=gridColor, linewidth=0.3, alpha=0.18)
     if title:
-        ax.set_title(title, color=TEXT, fontsize=9, fontweight="bold", pad=6)
+        ax.set_title(title, color=tickColor, fontsize=8, fontweight="600", pad=5,
+                     loc="left", fontfamily="monospace")
 
-def _legend(ax):
-    ax.legend(facecolor=PANEL, edgecolor=GRID, labelcolor=TEXT, fontsize=7)
 
-def _crash_lines(ax, model):
-    for t in model.crash_events:
-        ax.axvline(t, color=CRASH, linewidth=1.5, alpha=0.7, linestyle=":")
+def addLegend(ax):
+    leg = ax.legend(facecolor=surface, edgecolor=border, fontsize=6.5,
+                    framealpha=0.9)
+    for txt in leg.get_texts():
+        txt.set_color(tickColor)
 
-# ── Chart renderers ────────────────────────────────────────────────────────────
-def render_price_chart(model):
-    df = model.datacollector.get_model_vars_dataframe()
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(7, 5), facecolor=BG)
-    fig.subplots_adjust(hspace=0.35, left=0.1, right=0.97, top=0.93, bottom=0.1)
 
-    _style_ax(ax1, "Price & Fundamental Value")
+def addCrashLines(ax, model):
+    for t in model.crashEvents:
+        ax.axvline(t, color=crashColor, linewidth=1.2, alpha=0.6, linestyle=":")
+
+
+def addCrashRegions(ax, model, df):
+    if len(df.index) > WINDOW:
+        xMin, xMax = df.index[-WINDOW], df.index[-1]
+    else:
+        xMin, xMax = df.index[0], df.index[-1]
+
+    # Completed crashes
+    for start, end in model.crashWindows:
+        clampedStart = max(xMin, start)
+        clampedEnd = min(xMax, end)
+        if clampedStart < clampedEnd:
+            ax.axvspan(clampedStart, clampedEnd, color=crashColor, alpha=0.15, zorder=0)
+
+    # Currently active crash
+    if model.activeCrashTicks > 0 and model.currentCrashStart is not None:
+        clampedStart = max(xMin, model.currentCrashStart)
+        clampedEnd = xMax
+        if clampedStart <= clampedEnd:
+            ax.axvspan(clampedStart, clampedEnd, color=crashColor, alpha=0.20, zorder=0)
+
+
+def makeFig(wide=False):
+    w = 9.0 if wide else 6.0
+    fig, ax = plt.subplots(figsize=(w, 2.8), facecolor=bg)
+    fig.patch.set_facecolor(bg)
+    fig.subplots_adjust(left=0.08, right=0.97, top=0.87, bottom=0.20)
+    return fig, ax
+
+
+def renderPriceChart(model):
+    df = getDataFrame(model)
+    fig, ax = makeFig(wide=True)
+    styleAx(ax, "PRICE  /  FUNDAMENTAL")
     if "MidPrice" in df.columns and df["MidPrice"].dropna().any():
-        ax1.plot(df.index, df["MidPrice"], color=PRICE, linewidth=1.5, label="Mid Price")
+        midPrice = pd.to_numeric(df["MidPrice"], errors="coerce").ffill()
+        ax.plot(df.index, midPrice, color=priceColor, linewidth=1.4, label="Mid Price")
     if "Fundamental" in df.columns:
-        ax1.plot(df.index, df["Fundamental"], color=FUND, linewidth=1.2, linestyle="--", label="Fundamental", alpha=0.85)
-    _crash_lines(ax1, model)
-    if model.crash_events:
-        ax1.axvline(model.crash_events[-1], color=CRASH, linewidth=1.5, alpha=0.8, linestyle=":", label="Flash Crash")
-    ax1.set_ylabel("Price", color=TEXT, fontsize=8)
-    _legend(ax1)
-
-    _style_ax(ax2, "Bid-Ask Spread")
-    if "Spread" in df.columns and df["Spread"].dropna().any():
-        sv = df["Spread"].ffill()
-        ax2.fill_between(df.index, sv, color=SPREAD, alpha=0.4)
-        ax2.plot(df.index, sv, color=SPREAD, linewidth=1.2)
-        _crash_lines(ax2, model)
-    ax2.set_ylabel("Spread", color=TEXT, fontsize=8)
-    ax2.set_xlabel("Step",   color=TEXT, fontsize=8)
+        ax.plot(df.index, df["Fundamental"], color=fundColor, linewidth=1.1,
+                linestyle="--", alpha=0.85, label="Fundamental")
+    addCrashLines(ax, model)
+    addCrashRegions(ax, model, df)
+    if model.crashEvents:
+        ax.axvline(model.crashEvents[-1], color=crashColor, linewidth=1.4, alpha=0.8,
+                   linestyle=":", label="Crash")
+    if len(df.index) > WINDOW:
+        ax.set_xlim(df.index[-WINDOW], df.index[-1])
+    ax.set_ylabel("Price", color=tickColor, fontsize=7)
+    addLegend(ax)
     return fig
 
 
-def render_order_book(model):
-    fig, ax = plt.subplots(figsize=(5, 5), facecolor=BG)
-    fig.subplots_adjust(left=0.12, right=0.97, top=0.92, bottom=0.1)
-    title = "Live Order Book ⚠ CRASH ACTIVE" if model.active_crash_ticks > 0 else "Live Order Book (Top 10 Levels)"
-    _style_ax(ax, title)
-    if model.active_crash_ticks > 0:
-        ax.title.set_color(CRASH)
+def renderSpreadChart(model):
+    df = getDataFrame(model)
+    fig, ax = makeFig(wide=True)
+    styleAx(ax, "BID-ASK  SPREAD")
+    if "Spread" in df.columns:
+        spreadVals = pd.to_numeric(df["Spread"], errors="coerce").ffill().fillna(0)
+        ax.fill_between(df.index, spreadVals, color=spreadColor, alpha=0.3)
+        ax.plot(df.index, spreadVals, color=spreadColor, linewidth=1.2)
+        addCrashLines(ax, model)
+        addCrashRegions(ax, model, df)
+        if len(df.index) > WINDOW:
+            ax.set_xlim(df.index[-WINDOW], df.index[-1])
+    ax.set_ylabel("Spread", color=tickColor, fontsize=7)
+    return fig
 
-    bids, asks = model.get_order_book_snapshot(levels=10)
-    if not bids and not asks:
-        ax.text(0.5, 0.5, "No orders in book", transform=ax.transAxes, ha="center", va="center", color=TEXT, fontsize=10)
-        return fig
 
+def renderVolumeChart(model, ma_window=20):
+    df = getDataFrame(model)
+    fig, ax = makeFig(wide=True)
+    styleAx(ax, "TRADE  VOLUME")
+    if "TradeCount" in df.columns:
+        trades = pd.to_numeric(df["TradeCount"], errors="coerce").fillna(0)
+        volume = trades.diff().fillna(trades).clip(lower=0)
+        ax.bar(df.index, volume, color=volumeColor, width=0.8, alpha=0.6, align="center")
+        ma = volume.rolling(window=ma_window, min_periods=1).mean()
+        ax.plot(df.index, ma, color=priceColor, linewidth=1.2, linestyle="--",
+                label=f"{ma_window}-step MA")
+        addCrashLines(ax, model)
+        addCrashRegions(ax, model, df)
+        if len(df.index) > WINDOW:
+            ax.set_xlim(df.index[-WINDOW], df.index[-1])
+        addLegend(ax)
+    ax.set_ylabel("Trades", color=tickColor, fontsize=7)
+    ax.set_xlabel("Step", color=tickColor, fontsize=7)
+    return fig
+
+
+def renderDepthChart(model):
+    fig, ax = makeFig(wide=False)
+    styleAx(ax, "CUMULATIVE  BOOK  DEPTH")
+    bids, asks = model.getOrderBookSnapshot(levels=20)
     if bids:
-        ax.barh([d["price"] for d in bids], [d["qty"] for d in bids], color=BID, alpha=0.75, height=0.015, label="Bids")
+        bidPrices = sorted([d["price"] for d in bids])
+        bidQtys = [next(d["qty"] for d in bids if d["price"] == p) for p in bidPrices]
+        bidCum = np.cumsum(bidQtys[::-1])[::-1]
+        ax.fill_between(bidPrices, bidCum, color=bidColor, alpha=0.4, step="post")
+        ax.plot(bidPrices, bidCum, color=bidColor, linewidth=1.2, drawstyle="steps-post")
     if asks:
-        ax.barh([d["price"] for d in asks], [d["qty"] for d in asks], color=ASK, alpha=0.75, height=0.015, label="Asks")
-    mid = model.lob.midPrice()
+        askPrices = sorted([d["price"] for d in asks])
+        askQtys = [next(d["qty"] for d in asks if d["price"] == p) for p in askPrices]
+        askCum = np.cumsum(askQtys)
+        ax.fill_between(askPrices, askCum, color=askColor, alpha=0.4, step="post")
+        ax.plot(askPrices, askCum, color=askColor, linewidth=1.2, drawstyle="steps-post")
+    ax.set_ylabel("Cum. Qty", color=tickColor, fontsize=7)
+    leg = ax.legend(handles=[mpatches.Patch(color=bidColor, label="Bids", alpha=0.7),
+                             mpatches.Patch(color=askColor, label="Asks", alpha=0.7)],
+                    facecolor=surface, edgecolor=border, fontsize=6.5)
+    for txt in leg.get_texts():
+        txt.set_color(tickColor)
+    return fig
+
+
+def renderOrderBook(model):
+    fig, ax = makeFig(wide=False)
+    styleAx(ax, "LIVE  ORDER  BOOK")
+    bids, asks = model.getOrderBookSnapshot(levels=10)
+    if bids:
+        ax.barh([d["price"] for d in bids], [d["qty"] for d in bids],
+                color=bidColor, alpha=0.7, height=0.012, label="Bids")
+    if asks:
+        ax.barh([d["price"] for d in asks], [d["qty"] for d in asks],
+                color=askColor, alpha=0.7, height=0.012, label="Asks")
+    mid = model.limitOrderBook.midPrice()
     if mid:
-        ax.axhline(mid, color=PRICE, linewidth=1.2, linestyle="--", alpha=0.8, label=f"Mid: {mid:.2f}")
-    ax.set_xlabel("Quantity", color=TEXT, fontsize=8)
-    ax.set_ylabel("Price",    color=TEXT, fontsize=8)
-    _legend(ax)
+        ax.axhline(mid, color=priceColor, linewidth=1.2, linestyle="--",
+                   alpha=0.8, label=f"Mid {mid:.2f}")
+    ax.set_xlabel("Qty", color=tickColor, fontsize=7)
+    ax.set_ylabel("Price", color=tickColor, fontsize=7)
+    addLegend(ax)
     return fig
 
 
-def render_depth_chart(model):
-    fig, ax = plt.subplots(figsize=(5, 3.5), facecolor=BG)
-    fig.subplots_adjust(left=0.12, right=0.97, top=0.92, bottom=0.12)
-    _style_ax(ax, "Cumulative Book Depth")
-
-    bids, asks = model.get_order_book_snapshot(levels=20)
-    if not bids and not asks:
-        ax.text(0.5, 0.5, "No data", transform=ax.transAxes, ha="center", va="center", color=TEXT, fontsize=10)
-        return fig
-
-    if bids:
-        bp = sorted([d["price"] for d in bids])
-        bq = [next(d["qty"] for d in bids if d["price"] == p) for p in bp]
-        bc = np.cumsum(bq[::-1])[::-1]
-        ax.fill_between(bp, bc, color=BID, alpha=0.5, step="post")
-        ax.plot(bp, bc, color=BID, linewidth=1.2, drawstyle="steps-post")
-    if asks:
-        ap = sorted([d["price"] for d in asks])
-        aq = [next(d["qty"] for d in asks if d["price"] == p) for p in ap]
-        ac = np.cumsum(aq)
-        ax.fill_between(ap, ac, color=ASK, alpha=0.5, step="post")
-        ax.plot(ap, ac, color=ASK, linewidth=1.2, drawstyle="steps-post")
-
-    ax.set_xlabel("Price", color=TEXT, fontsize=8)
-    ax.set_ylabel("Cumulative Qty", color=TEXT, fontsize=8)
-    ax.legend(handles=[mpatches.Patch(color=BID, label="Bid Depth", alpha=0.7),
-                       mpatches.Patch(color=ASK, label="Ask Depth", alpha=0.7)],
-              facecolor=PANEL, edgecolor=GRID, labelcolor=TEXT, fontsize=7)
-    return fig
-
-
-def render_agent_activity(model):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 3), facecolor=BG)
-    fig.subplots_adjust(left=0.08, right=0.97, top=0.88, bottom=0.15, wspace=0.35)
-
-    ax1.set_facecolor(BG)
-    ax1.set_title("Agent Composition", color=TEXT, fontsize=9, fontweight="bold")
-    counts = [len(model._market_makers), len(model._fundamental), len(model._noisy),
-              len(model._hft), len(model._momentum), len(model._stoploss)]
+def renderAgentActivity(model):
+    fig, ax = makeFig(wide=False)
+    ax.set_facecolor(bg)
+    fig.patch.set_facecolor(bg)
+    ax.set_title("AGENT  COMPOSITION", color=tickColor, fontsize=8, fontweight="600",
+                 pad=5, loc="left", fontfamily="monospace")
+    counts = [len(model.marketMakers), len(model.fundamental), len(model.noisy),
+              len(model.highFrequency), len(model.momentum), len(model.stopLoss)]
     labels = ["Mkt Maker", "Fundamental", "Noisy", "HFT", "Momentum", "Stop Loss"]
-    colors = [BID, FUND, PRICE, TRADE, "#388e3c", "#f57c00"]
+    colors = [bidColor, fundColor, priceColor, tradeColor, "#a8dadc", "#e9c46a"]
     nz = [(c, l, col) for c, l, col in zip(counts, labels, colors) if c > 0]
     if nz:
         c_, l_, col_ = zip(*nz)
-        _, _, autos = ax1.pie(c_, labels=l_, colors=col_, autopct="%1.0f%%",
-                              textprops={"color": TEXT, "fontsize": 7},
-                              wedgeprops={"edgecolor": "#ffffff", "linewidth": 1.5})
-        for a in autos:
-            a.set_color(TEXT); a.set_fontsize(7)
-
-    _style_ax(ax2, "Cumulative Trade Count")
-    df = model.datacollector.get_model_vars_dataframe()
-    if "TradeCount" in df.columns:
-        ax2.plot(df.index, df["TradeCount"], color=TRADE, linewidth=1.5)
-        ax2.fill_between(df.index, df["TradeCount"], color=TRADE, alpha=0.2)
-        _crash_lines(ax2, model)
-    ax2.set_xlabel("Step",   color=TEXT, fontsize=8)
-    ax2.set_ylabel("Trades", color=TEXT, fontsize=8)
+        wedges, texts, autotexts = ax.pie(
+            c_, labels=l_, colors=col_, autopct="%1.0f%%",
+            textprops={"color": tickColor, "fontsize": 7},
+            wedgeprops={"edgecolor": bg, "linewidth": 1.5},
+            startangle=90
+        )
+        for t in texts + autotexts:
+            t.set_color(tickColor)
+            t.set_fontsize(7)
     return fig
 
 
-# ── Solara components ──────────────────────────────────────────────────────────
 @solara.component
-def ControlPanel():
-    m = model_state.value
+def Sidebar():
+    model = modelState.value
 
     def advance(n):
-        if m is not None:
+        if model:
             for _ in range(n):
-                m.step()
-            step_count.set(step_count.value + n)
+                model.step()
+            modelState.set(modelState.value)
+            stepCount.set(stepCount.value + n)
 
-    with solara.Column(classes=["panel"]):
-        solara.Text("⚡ Flash Crash ABM", classes=["panel-title"])
+    with solara.Column(classes=["dash-sidebar"]):
+        solara.Text("CONTROLS", classes=["sidebar-section"])
 
-        with solara.Row(style={"flexWrap": "wrap", "gap": "4px"}):
-            solara.Button("↺ Reset", classes=["btn"], on_click=lambda: [model_state.set(make_model()), step_count.set(0), running.set(False)])
-            solara.Button("+10",  classes=["btn"], on_click=lambda: advance(10))
-            solara.Button("+50",  classes=["btn"], on_click=lambda: advance(50))
-            solara.Button("+200", classes=["btn"], on_click=lambda: advance(200))
+        with solara.Row(classes=["btn-step-row"]):
+            solara.Button("RESET", classes=["btn-step"], on_click=lambda: [
+                modelState.set(makeModel()), stepCount.set(0), running.set(False)
+            ])
+            solara.Button("+10", classes=["btn-step"], on_click=lambda: advance(10))
+            solara.Button("+50", classes=["btn-step"], on_click=lambda: advance(50))
+            solara.Button("+200", classes=["btn-step"], on_click=lambda: advance(200))
 
-        label = "⏸ Pause" if running.value else "▷ Run"
-        solara.Button(label, classes=["btn-run"] + (["paused"] if running.value else []),
-                      on_click=lambda: running.set(not running.value))
-        solara.Text(f"Step: {step_count.value}", classes=["step-counter"])
+        solara.Button(
+            "RUN" if not running.value else "PAUSE",
+            classes=["btn-primary"],
+            on_click=lambda: running.set(not running.value)
+        )
 
-        solara.Text("── Flash Crash ──", classes=["crash-label"])
-        if m is not None:
-            if m.active_crash_ticks > 0:
-                crash_status = f"⚠ CRASH ACTIVE ({m.active_crash_ticks} ticks left)"
-            elif m.crash_cooldown > 0:
-                crash_status = f"Cooldown: {m.crash_cooldown} ticks"
+        _ = stepCount.value
+        if model:
+            isCrashActive = model.activeCrashTicks > 0
+            isCooldown = model.crashCooldown > 0
+            canTrigger = not isCrashActive and not isCooldown
+
+            if isCrashActive:
+                label = f"CRASH ACTIVE ({model.activeCrashTicks})"
+                btnClass = "btn-danger"  # bright red
+            elif isCooldown:
+                label = f"COOLDOWN: {model.crashCooldown}"
+                btnClass = "btn-cooldown"  # muted earthy red — distinct from active
             else:
-                crash_status = f"Events: {len(m.crash_events)}"
-            solara.Text(crash_status, classes=["stat-value"])
+                label = "TRIGGER FLASH CRASH"
+                btnClass = "btn-danger"
 
-        def on_trigger_crash():
-            if m is not None:
-                m.trigger_manual_crash()
-                step_count.set(step_count.value)
+            def triggerCrash():
+                if canTrigger:
+                    model.triggerManualCrash()
+                    stepCount.set(stepCount.value)
 
-        crash_active = m is not None and m.active_crash_ticks > 0
-        solara.Button("💥 Trigger Flash Crash",
-                      classes=["btn-crash"] + (["active"] if crash_active else []),
-                      on_click=on_trigger_crash)
+            solara.Button(label, classes=[btnClass], disabled=not canTrigger, on_click=triggerCrash)
 
-        solara.SliderFloat("Crash Probability", value=crash_prob, min=0.0, max=0.02, step=0.001)
+        solara.SliderFloat("Crash Probability", value=crashProbabilityAmount, min=0.0, max=0.02, step=0.001)
 
-        solara.Text("── Agent Counts ──", classes=["section-label"])
-        solara.SliderInt("Market Makers", value=n_market_maker, min=0, max=20)
-        solara.SliderInt("Noisy Agents",  value=n_noisy,        min=0, max=20)
-        solara.SliderInt("Fundamental",   value=n_fundamental,  min=0, max=10)
-        solara.SliderInt("HFT Agents",    value=n_hft,          min=0, max=10)
-        solara.SliderInt("Momentum",      value=n_momentum,     min=0, max=10)
-        solara.SliderInt("Stop Loss",     value=n_stoploss,     min=0, max=10)
+        solara.Text("AGENTS", classes=["sidebar-section"])
+        solara.SliderInt("Market Makers", value=marketMakerCount, min=0, max=20)
+        solara.SliderInt("Noisy Agents", value=noisyCount, min=0, max=20)
+        solara.SliderInt("Fundamental", value=fundamentalCount, min=0, max=10)
+        solara.SliderInt("HFT Agents", value=highFrequencyCount, min=0, max=10)
+        solara.SliderInt("Momentum", value=momentumCount, min=0, max=10)
+        solara.SliderInt("Stop Loss", value=stopLossCount, min=0, max=10)
 
-        solara.Text("── Market Parameters ──", classes=["section-label"])
-        solara.SliderFloat("Fundamental Vol", value=fundamental_vol, min=0.01, max=2.0, step=0.01)
-        solara.SliderFloat("MM Spread",       value=mm_spread,       min=0.1,  max=3.0, step=0.05)
+        solara.Text("MARKET", classes=["sidebar-section"])
+        solara.SliderFloat("Fundamental Vol", value=fundamentalVolatilityAmount, min=0.01, max=2.0, step=0.01)
+        solara.SliderFloat("MM Spread", value=marketMakerSpreadAmount, min=0.1, max=3.0, step=0.05)
 
-        if m is not None:
-            solara.Text("── Live Stats ──", classes=["section-label"])
-            mid    = m.lob.midPrice()
-            spread = m.lob.spread()
-            stats  = [
-                ("Mid Price",    f"{mid:.2f}"                          if mid    else "—"),
-                ("Fundamental",  f"{float(m.market.fundamentalPrice):.2f}"),
-                ("Spread",       f"{spread:.4f}"                       if spread else "—"),
-                ("Total Trades", str(len(m.lob.trades))),
-                ("Bid Depth",    str(m.lob.depth("buy",  10))),
-                ("Ask Depth",    str(m.lob.depth("sell", 10))),
-                ("Crash Events", str(len(m.crash_events))),
-            ]
-            for lbl, val in stats:
-                with solara.Row(style={"justifyContent": "space-between"}):
-                    solara.Text(lbl, classes=["stat-label"])
-                    solara.Text(val, classes=["stat-value"])
+
+CELL_LEFT = {
+    "flex": "1.5",
+    "minWidth": "0",
+    "minHeight": "0",
+    "overflow": "hidden",
+    "background": bg,
+}
+
+CELL_RIGHT = {
+    "flex": "1",
+    "minWidth": "0",
+    "minHeight": "0",
+    "overflow": "hidden",
+    "background": bg,
+}
+
+ROW_STYLE = {
+    "flex": "1",
+    "minHeight": "0",
+    "overflow": "hidden",
+    "borderBottom": f"1px solid {border}",
+    "alignItems": "stretch",
+    "gap": "0",
+}
+
+ROW_LAST_STYLE = {**ROW_STYLE, "borderBottom": "none"}
+
+DIVIDER = {"borderRight": f"1px solid {border}"}
 
 
 @solara.component
-def ChartPanel():
-    m = model_state.value
-    if m is None:
-        solara.Text("Click ↺ Reset to initialise the model", classes=["stat-label"])
+def ChartGrid():
+    model = modelState.value
+    if not model:
+        solara.Text("Initialising…", style={"color": muted, "padding": "20px"})
         return
 
-    _ = step_count.value
+    _ = stepCount.value
 
-    with solara.Column(style={"gap": "16px"}):
-        with solara.Row(style={"gap": "16px", "alignItems": "flex-start"}):
-            with solara.Column(style={"flex": "1"}):
-                for fig in [render_order_book(m), render_depth_chart(m)]:
-                    solara.FigureMatplotlib(fig); plt.close(fig)
-            with solara.Column(style={"flex": "1.4"}):
-                for fig in [render_price_chart(m), render_agent_activity(m)]:
-                    solara.FigureMatplotlib(fig); plt.close(fig)
+    with solara.Column(style={
+        "flex": "1",
+        "minWidth": "0",
+        "height": "calc(100vh - 48px)",
+        "overflow": "hidden",
+        "gap": "0",
+        "alignItems": "stretch",
+    }):
+        with solara.Row(style=ROW_STYLE):
+            with solara.Column(style={**CELL_LEFT, **DIVIDER}):
+                solara.FigureMatplotlib(renderPriceChart(model))
+            with solara.Column(style=CELL_RIGHT):
+                solara.FigureMatplotlib(renderDepthChart(model))
+
+        with solara.Row(style=ROW_STYLE):
+            with solara.Column(style={**CELL_LEFT, **DIVIDER}):
+                solara.FigureMatplotlib(renderSpreadChart(model))
+            with solara.Column(style=CELL_RIGHT):
+                solara.FigureMatplotlib(renderOrderBook(model))
+
+        with solara.Row(style=ROW_LAST_STYLE):
+            with solara.Column(style={**CELL_LEFT, **DIVIDER}):
+                solara.FigureMatplotlib(renderVolumeChart(model))
+            with solara.Column(style=CELL_RIGHT):
+                solara.FigureMatplotlib(renderAgentActivity(model))
 
 
 @solara.component
-def Page():
-    solara.Style(CSS)
+def page():
+    solara.Style(css)
 
-    async def auto_stepper():
+    if modelState.value is None:
+        modelState.set(makeModel())
+
+    async def autoStepper():
         while True:
             await asyncio.sleep(0.3)
-            if running.value and model_state.value is not None:
-                model_state.value.step()
-                step_count.set(step_count.value + 1)
+            if running.value and modelState.value:
+                modelState.value.step()
+                stepCount.set(stepCount.value + 1)
 
-    solara.lab.use_task(auto_stepper, dependencies=[])
+    solara.lab.use_task(autoStepper, dependencies=[])
 
-    with solara.Row(style={"background": "#1976d2", "borderBottom": "1px solid #1565c0",
-                           "padding": "12px 24px", "alignItems": "center", "gap": "12px"}):
-        solara.Text("📈 Flash Crash ABM Simulator", classes=["header-title"])
-        solara.Text("Mesa + Solara  ·  with Manual Crash Trigger", classes=["header-sub"])
+    with solara.Column(style={
+        "height": "100vh",
+        "overflow": "hidden",
+        "gap": "0",
+        "padding": "0",
+        "margin": "0",
+    }):
+        with solara.Row(classes=["dash-header"]):
+            _ = stepCount.value
+            solara.Text("FLASH CRASH ABM", classes=["header-title"])
+            solara.Text("MESA + SOLARA", classes=["header-badge"])
 
-    with solara.Row(style={"padding": "16px", "gap": "16px", "alignItems": "flex-start",
-                           "background": BG, "minHeight": "calc(100vh - 60px)"}):
-        with solara.Column(style={"width": "270px", "flexShrink": "0"}):
-            ControlPanel()
-        with solara.Column(style={"flex": "1", "minWidth": "0"}):
-            ChartPanel()
+            model = modelState.value
+            if model:
+                midPrice = model.limitOrderBook.midPrice()
+                spread = model.limitOrderBook.spread()
+                stats = [
+                    ("MID PRICE", f"{midPrice:.2f}" if midPrice else "—"),
+                    ("FUNDAMENTAL", f"{float(model.market.fundamentalPrice):.2f}"),
+                    ("SPREAD", f"{spread:.4f}" if spread else "—"),
+                    ("TRADES", str(len(model.limitOrderBook.trades))),
+                    ("BID DEPTH", str(model.limitOrderBook.depth("buy", 10))),
+                    ("ASK DEPTH", str(model.limitOrderBook.depth("sell", 10))),
+                    ("CRASHES", str(len(model.crashEvents))),
+                    ("STEP", str(stepCount.value)),
+                ]
+                for lbl, val in stats:
+                    with solara.Column(classes=["stat-block"]):
+                        solara.Text(lbl, classes=["stat-label"])
+                        solara.Text(val, classes=["stat-value"])
+
+        with solara.Row(style={
+            "flex": "1",
+            "minHeight": "0",
+            "overflow": "hidden",
+            "gap": "0",
+            "alignItems": "stretch",
+            "flexWrap": "nowrap",
+        }):
+            Sidebar()
+            ChartGrid()

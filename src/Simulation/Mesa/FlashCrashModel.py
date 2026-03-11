@@ -26,7 +26,7 @@ class FlashCrashModel(mesa.Model):
             numberOfNoisyAgents: int = 7,
             numberOfFundamentalAgents: int = 3,
             numberOfHighFrequencyAgents: int = 2,
-            numberOfMomentumTraders: int = 3,
+            numberOfMomentumAgents: int = 3,
             numberOfStopLossAgents: int = 3,
             fundamentalVolatility: float = 0.2,
             marketMakerSpread: float = 0.7,
@@ -43,7 +43,7 @@ class FlashCrashModel(mesa.Model):
             numberOfNoisyAgents: Number of noisy trading agents.
             numberOfFundamentalAgents: Number of fundamental-value trading agents.
             numberOfHighFrequencyAgents: Number of high-frequency trading agents.
-            numberOfMomentumTraders: Number of momentum trading agents.
+            numberOfMomentumAgents: Number of momentum trading agents.
             numberOfStopLossAgents: Number of stop-loss agents.
             fundamentalVolatility: Standard deviation for fundamental price updates.
             marketMakerSpread: Default spread for market maker agents.
@@ -57,6 +57,8 @@ class FlashCrashModel(mesa.Model):
         self.limitOrderBook = LimitOrderBook()
         self.market = Market(self.limitOrderBook, fundamentalVolatility=fundamentalVolatility)
         self.timeTick = 0
+        self.crashWindows: List[Tuple[int, int]] = []
+        self.currentCrashStart: Optional[int] = None
         self.crashProbability = crashProbability
         self.crashDuration = crashDuration
         self.noCrashBefore = noCrashBefore
@@ -118,7 +120,7 @@ class FlashCrashModel(mesa.Model):
                 momentumThreshold=0.002,
                 cooldownTicks=3
             )
-            for index in range(numberOfMomentumTraders)
+            for index in range(numberOfMomentumAgents)
         ]
         self.stopLoss = [
             StopLossAgent(
@@ -188,12 +190,13 @@ class FlashCrashModel(mesa.Model):
                 self.activeCrashTicks = self.crashDuration
                 self.crashCooldown = self.waitTillNextCrash
                 self.crashEvents.append(tick)
+                self.currentCrashStart = tick
         if self.activeCrashTicks > 0:
             if self.limitOrderBook.bestBid() is None:
                 self.activeCrashTicks = 0
             else:
                 if self.fundamental:
-                    panicSeller: AgentParent = random.choice(self.fundamental)
+                    panicSeller = random.choice(self.fundamental)
                 elif self.noisy:
                     panicSeller = random.choice(self.noisy)
                 else:
@@ -214,6 +217,9 @@ class FlashCrashModel(mesa.Model):
                     if panicSize > 0:
                         self.limitOrderBook.submitMarketOrder("sell", panicSize, panicSeller, tick)
                 self.activeCrashTicks -= 1
+                if self.activeCrashTicks == 0 and self.currentCrashStart is not None:
+                    self.crashWindows.append((self.currentCrashStart, tick))
+                    self.currentCrashStart = None
         self.market.updatePrice(tick)
         self.dataCollector.collect(self)
 
@@ -252,3 +258,4 @@ class FlashCrashModel(mesa.Model):
             self.activeCrashTicks = self.crashDuration
             self.crashCooldown = self.waitTillNextCrash
             self.crashEvents.append(self.timeTick)
+            self.currentCrashStart = self.timeTick
