@@ -7,6 +7,8 @@ class HighFrequencyAgent(AgentParent):
     """
     Child of AgentParent, HighFrequencyAgent follows a simple market making strategy.
     Places buy and sell orders limits around the mid-price and sells as inventory nears a set limit.
+    During a detected price downtrend the agent suppresses bid orders to avoid accumulating inventory into a crash.
+    During a detected price uptrend the agent posts maximum bid size to actively support price recovery.
     The high frequency rate of trading is defined out of scope for HighFrequencyAgent.
     """
 
@@ -18,7 +20,8 @@ class HighFrequencyAgent(AgentParent):
             maxTradeNum: int = 3,
             tradeProbability: float = 1.0,
             inventoryCap: int = 40,
-            bufferBeforeReachingCap: int = 4
+            bufferBeforeReachingCap: int = 4,
+            downtrendWindow: int = 3,
     ):
         """
         Initialises a HighFrequencyAgent.
@@ -30,6 +33,7 @@ class HighFrequencyAgent(AgentParent):
             tradeProbability: Probability that the agent trades at a given step.
             inventoryCap: Maximum quantity the agent aims to hold.
             bufferBeforeReachingCap: Threshold before the quantity cap where the agent begins selling.
+            downtrendWindow: Number of ticks to look back when detecting a price downtrend or uptrend.
         """
         AgentParent.__init__(self, name, cash, quantity)
         self._tickSize = Decimal("0.01")
@@ -39,6 +43,7 @@ class HighFrequencyAgent(AgentParent):
         self._tradeProbability = float(tradeProbability)
         self._inventoryCap = int(inventoryCap)
         self._bufferBeforeReachingCap = int(bufferBeforeReachingCap)
+        self._downtrendWindow = int(downtrendWindow)
 
     def _cancelQuotes(self, logOrderBook):
         """
@@ -78,14 +83,16 @@ class HighFrequencyAgent(AgentParent):
             return True
         return False
 
-    def _calculateBidAsk(self, midPrice):
+    def _calculateBidAsk(self, midPrice, aggressive: bool = False):
         """
         Calculates bid and ask prices around the current market mid-price.
+        In aggressive mode the bid is placed at mid-price to guarantee a fill and accelerate recovery.
         Returns a tuple containing bid and ask prices.
         Parameters:
             midPrice: Current market mid-price.
+            aggressive: If True, places bid at mid-price rather than one tick below.
         """
-        bid = midPrice - self._tickSize
+        bid = midPrice if aggressive else midPrice - self._tickSize
         ask = midPrice + self._tickSize
         return bid, ask
 
@@ -116,10 +123,40 @@ class HighFrequencyAgent(AgentParent):
         if askSize > 0:
             self._orderIdAsk = logOrderBook.submitLimitOrder("sell", ask, askSize, self, timeTick)
 
+    def _isInDowntrend(self, market) -> bool:
+        """
+        Detects whether the market is in a price downtrend by comparing the current price
+        against the price downtrendWindow ticks ago.
+        Returns True if price is lower than it was downtrendWindow ticks ago, otherwise False.
+        Parameters:
+            market: Instance of Market that provides the price history.
+        """
+        priceHistory = market.priceHistory
+        return (
+            len(priceHistory) >= self._downtrendWindow
+            and priceHistory[-1] < priceHistory[-self._downtrendWindow]
+        )
+
+    def _isInUptrend(self, market) -> bool:
+        """
+        Detects whether the market is in a price uptrend by comparing the current price
+        against the price downtrendWindow ticks ago.
+        Returns True if price is higher than it was downtrendWindow ticks ago, otherwise False.
+        Parameters:
+            market: Instance of Market that provides the price history.
+        """
+        priceHistory = market.priceHistory
+        return (
+            len(priceHistory) >= self._downtrendWindow
+            and priceHistory[-1] > priceHistory[-self._downtrendWindow]
+        )
+
     def step(self, market, logOrderBook, timeTick):
         """
         Step is called at the current simulation time step, when the HighFrequencyAgent executes its trading strategy.
         Places limit orders around the current market price and adjusts its behaviour based on inventory levels.
+        Suppresses bid orders during a detected price downtrend to avoid accumulating inventory into a crash.
+        During a detected uptrend the agent posts maximum bid size at mid-price to actively drive price recovery.
         Parameters:
             market: Instance of Market that provides the current market price.
             logOrderBook: Instance of LimitOrderBook used to submit and cancel orders.
@@ -136,7 +173,12 @@ class HighFrequencyAgent(AgentParent):
             return
         if self._needsToSell(logOrderBook, timeTick):
             return
-        bid, ask = self._calculateBidAsk(midPrice)
+        inUptrend = self._isInUptrend(market)
         bidSize, askSize = self._calculateSizes()
         self._cancelQuotes(logOrderBook)
+        if self._isInDowntrend(market):
+            bidSize = 0
+        elif inUptrend:
+            bidSize = min(self._maxTradeNum, max(0, self._inventoryCap - int(self.quantity)))
+        bid, ask = self._calculateBidAsk(midPrice, aggressive=inUptrend)
         self._submitOrders(logOrderBook, bid, ask, bidSize, askSize, timeTick)

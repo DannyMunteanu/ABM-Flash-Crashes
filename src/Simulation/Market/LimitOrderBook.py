@@ -1,6 +1,7 @@
 import pandas as pd
 from decimal import Decimal
 from collections import deque
+from sortedcontainers import SortedList
 from typing import Optional, Tuple, Dict, List
 from ..Agents.AgentParent import AgentParent
 from .Order import Order
@@ -26,6 +27,8 @@ class LimitOrderBook:
         self._trades = []
         self._nextId = 0
         self._sequenceNumber = 0
+        self._sortedBidPrices = SortedList(key=lambda x: -x)
+        self._sortedAskPrices = SortedList()
 
     @property
     def bids(self) -> Dict[Decimal, deque]:
@@ -62,6 +65,20 @@ class LimitOrderBook:
         """
         return self._trades
 
+    @property
+    def sortedBidPrices(self) -> SortedList:
+        """
+        Returns the sorted list of bid prices in descending order.
+        """
+        return self._sortedBidPrices
+
+    @property
+    def sortedAskPrices(self) -> SortedList:
+        """
+        Returns the sorted list of ask prices in ascending order.
+        """
+        return self._sortedAskPrices
+
     def submitLimitOrder(
             self,
             side: str,
@@ -89,8 +106,14 @@ class LimitOrderBook:
         remaining = size - filled
         if remaining > 0:
             order.size = remaining
-            book, quantityBook = (self._bids, self._bidQuantity) if side == "buy" else (self._asks, self._askQuantity)
-            book.setdefault(price, deque()).append(order)
+            if side == "buy":
+                book, quantityBook, sortedPrices = self._bids, self._bidQuantity, self._sortedBidPrices
+            else:
+                book, quantityBook, sortedPrices = self._asks, self._askQuantity, self._sortedAskPrices
+            if price not in book:
+                book[price] = deque()
+                sortedPrices.add(price)
+            book[price].append(order)
             quantityBook[price] = quantityBook.get(price, 0) + remaining
             self._orders[order.orderId] = order
             return order.orderId
@@ -113,14 +136,14 @@ class LimitOrderBook:
             timeTick: Current point in time for the simulation.
         """
         self._sequenceNumber += 1
-        book, quantityBook = (self._asks, self._askQuantity) if side == "buy" else (self._bids, self._bidQuantity)
-        startLevels = len(book)
-        startQuantity = sum(quantityBook.values())
+        if side == "buy":
+            book, quantityBook, sortedPrices = self._asks, self._askQuantity, self._sortedAskPrices
+        else:
+            book, quantityBook, sortedPrices = self._bids, self._bidQuantity, self._sortedBidPrices
         remaining = size
         totalValue = Decimal("0")
-        bestFunction = min if side == "buy" else max
-        while remaining > 0 and book:
-            price = bestFunction(book.keys())
+        while remaining > 0 and sortedPrices:
+            price = sortedPrices[0]
             queue = book[price]
             while remaining > 0 and queue:
                 resting = queue[0]
@@ -136,11 +159,13 @@ class LimitOrderBook:
             if not queue:
                 del book[price]
                 del quantityBook[price]
+                sortedPrices.remove(price)
         filled = size - remaining
         if remaining > 0:
             agentName = getattr(agent, "_name", None) or str(agent)
+            startLevels = len(book) + (size - remaining)
             print(f"INFO: {agentName} market {side} only filled {filled}/{size} — book exhausted "
-                  f"(startLevels={startLevels}, startQty={startQuantity}, endLevels={len(book)})")
+                  f"(endLevels={len(book)})")
         averagePrice = totalValue / filled if filled > 0 else None
         return averagePrice, filled
 
@@ -154,7 +179,10 @@ class LimitOrderBook:
         if orderId not in self._orders:
             return False
         order = self._orders.pop(orderId)
-        book, quantityBook = (self._bids, self._bidQuantity) if order.side == "buy" else (self._asks, self._askQuantity)
+        if order.side == "buy":
+            book, quantityBook, sortedPrices = self._bids, self._bidQuantity, self._sortedBidPrices
+        else:
+            book, quantityBook, sortedPrices = self._asks, self._askQuantity, self._sortedAskPrices
         price = order.price
         if price in book:
             try:
@@ -165,20 +193,20 @@ class LimitOrderBook:
             if not book[price] or quantityBook[price] <= 0:
                 del book[price]
                 del quantityBook[price]
+                sortedPrices.remove(price)
         return True
 
-    # State queries
-    def bestBid(self) -> Optional[float]:
+    def bestBid(self) -> Optional[Decimal]:
         """
         Returns the highest bid price currently in the order book.
         """
-        return max(self._bids.keys()) if self._bids else None
+        return self._sortedBidPrices[0] if self._sortedBidPrices else None
 
-    def bestAsk(self) -> Optional[float]:
+    def bestAsk(self) -> Optional[Decimal]:
         """
         Returns the lowest ask price currently in the order book.
         """
-        return min(self._asks.keys()) if self._asks else None
+        return self._sortedAskPrices[0] if self._sortedAskPrices else None
 
     def midPrice(self) -> Optional[float]:
         """
@@ -204,9 +232,13 @@ class LimitOrderBook:
             side: Side of the book either buy or sell.
             levels: Number of price levels to include.
         """
-        quantityBook = self._bidQuantity if side == "buy" else self._askQuantity
-        prices = sorted(quantityBook.keys(), reverse=(side == "buy"))[:levels]
-        return sum(quantityBook[p] for p in prices)
+        if side == "buy":
+            sortedPrices = self._sortedBidPrices
+            quantityBook = self._bidQuantity
+        else:
+            sortedPrices = self._sortedAskPrices
+            quantityBook = self._askQuantity
+        return sum(quantityBook[p] for p in sortedPrices[:levels])
 
     def tradeHistory(self) -> pd.DataFrame:
         """
@@ -223,13 +255,15 @@ class LimitOrderBook:
             timeTick: Current point in time for the simulation.
         """
         filled = 0
-        book, quantityBook = (self._asks, self._askQuantity) if order.side == "buy" else (self._bids, self._bidQuantity)
-        bestFunction = min if order.side == "buy" else max
-        crossOk = (lambda orderPrice, bookPrice: orderPrice >= bookPrice) if order.side == "buy" else (
-            lambda orderPrice, bookPrice: orderPrice <= bookPrice)
-        while order.size > filled and book:
-            best = bestFunction(book.keys())
-            if not crossOk(order.price, best):
+        if order.side == "buy":
+            book, quantityBook, sortedPrices = self._asks, self._askQuantity, self._sortedAskPrices
+            crossOk = lambda bookPrice: order.price >= bookPrice
+        else:
+            book, quantityBook, sortedPrices = self._bids, self._bidQuantity, self._sortedBidPrices
+            crossOk = lambda bookPrice: order.price <= bookPrice
+        while order.size > filled and sortedPrices:
+            best = sortedPrices[0]
+            if not crossOk(best):
                 break
             queue = book[best]
             while order.size > filled and queue:
@@ -245,6 +279,7 @@ class LimitOrderBook:
             if not queue:
                 del book[best]
                 del quantityBook[best]
+                sortedPrices.remove(best)
         return filled
 
     def _fill(

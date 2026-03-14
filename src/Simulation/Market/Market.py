@@ -93,7 +93,7 @@ class Market:
             price = float(self.price)
         if price is None:
             price = float(self._fundamentalPrice)
-        price += random.gauss(0, self._noiseStandard)
+        price = float(price) + random.gauss(0, self._noiseStandard)
         if price <= 0:
             price = 0.01
         self.price = Decimal(str(price))

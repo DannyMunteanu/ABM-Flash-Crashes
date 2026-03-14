@@ -13,14 +13,14 @@ from Simulation.Mesa.FlashCrashModel import FlashCrashModel
 modelState = solara.reactive(None)
 running = solara.reactive(False)
 stepCount = solara.reactive(0)
-marketMakerCount = solara.reactive(15)
-noisyCount = solara.reactive(7)
-fundamentalCount = solara.reactive(3)
-highFrequencyCount = solara.reactive(2)
-momentumCount = solara.reactive(3)
-stopLossCount = solara.reactive(3)
-fundamentalVolatilityAmount = solara.reactive(0.2)
-marketMakerSpreadAmount = solara.reactive(0.7)
+marketMakerCount = solara.reactive(25)
+noisyCount = solara.reactive(60)
+fundamentalCount = solara.reactive(200)
+highFrequencyCount = solara.reactive(15)
+momentumCount = solara.reactive(90)
+stopLossCount = solara.reactive(40)
+fundamentalVolatilityAmount = solara.reactive(0.05)
+marketMakerSpreadAmount = solara.reactive(0.2)
 crashProbabilityAmount = solara.reactive(0.002)
 
 
@@ -35,6 +35,12 @@ def makeModel():
         fundamentalVolatility=fundamentalVolatilityAmount.value,
         marketMakerSpread=marketMakerSpreadAmount.value,
         crashProbability=crashProbabilityAmount.value,
+        marketMakerStepProbability=0.9,
+        noisyStepProbability=0.5,
+        fundamentalStepProbability=0.02,
+        highFrequencyStepProbability=1.0,
+        momentumStepProbability=0.33,
+        stopLossStepProbability=0.5
     )
 
 
@@ -57,7 +63,7 @@ volumeColor = "#f0c040"
 gridColor = "#ffffff"  # white grid lines
 tickColor = "#e0e6f5"  # near-white tick labels
 
-WINDOW = 200
+WINDOW = 500
 
 css = f"""
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
@@ -614,12 +620,12 @@ def Sidebar():
         solara.SliderFloat("Crash Probability", value=crashProbabilityAmount, min=0.0, max=0.02, step=0.001)
 
         solara.Text("AGENTS", classes=["sidebar-section"])
-        solara.SliderInt("Market Makers", value=marketMakerCount, min=0, max=20)
-        solara.SliderInt("Noisy Agents", value=noisyCount, min=0, max=20)
-        solara.SliderInt("Fundamental", value=fundamentalCount, min=0, max=10)
-        solara.SliderInt("HFT Agents", value=highFrequencyCount, min=0, max=10)
-        solara.SliderInt("Momentum", value=momentumCount, min=0, max=10)
-        solara.SliderInt("Stop Loss", value=stopLossCount, min=0, max=10)
+        solara.SliderInt("Market Makers", value=marketMakerCount, min=0, max=200)
+        solara.SliderInt("Noisy Agents", value=noisyCount, min=0, max=200)
+        solara.SliderInt("Fundamental", value=fundamentalCount, min=0, max=200)
+        solara.SliderInt("HFT Agents", value=highFrequencyCount, min=0, max=200)
+        solara.SliderInt("Momentum", value=momentumCount, min=0, max=200)
+        solara.SliderInt("Stop Loss", value=stopLossCount, min=0, max=200)
 
         solara.Text("MARKET", classes=["sidebar-section"])
         solara.SliderFloat("Fundamental Vol", value=fundamentalVolatilityAmount, min=0.01, max=2.0, step=0.01)

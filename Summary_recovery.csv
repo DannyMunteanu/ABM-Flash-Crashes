@@ -1,6 +1,0 @@
-Simulation,Mean Recovery  Time (Ticks),Median Recovery Time (Ticks),STD Dev: Recovery Time,Crash Recovery Rate (%)
-Baseline Model,110.28,82,90.86,83
-Baseline Model with HFT,104.12,79,89.72,89
-Baseline Model with Momentum,101.59,64,106.89,88
-Baseline Model with Stop-Loss,124.71,69.5,140.83,80
-Full Market,84.91,58.5,89.06,86
