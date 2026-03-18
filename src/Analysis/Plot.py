@@ -66,31 +66,26 @@ def plotHistogramWithNormalCurve(
         outputPath: File path to save the plot.
     """
     fig, ax = plt.subplots(figsize=(9, 5))
-    fig.patch.set_facecolor("#0f0f0f")
-    ax.set_facecolor("#1a1a1a")
 
     ax.hist(
         values, bins=12, density=True,
-        color=colour, alpha=0.75, edgecolor="#0f0f0f", linewidth=0.8,
+        color=colour, alpha=0.7, edgecolor="white", linewidth=0.8,
     )
 
     if std > 0:
         xMin, xMax = min(values) - std, max(values) + std
         x = np.linspace(xMin, xMax, 300)
         p = norm.pdf(x, mean, std)
-        ax.plot(x, p, color="white", linewidth=2, linestyle="--", label=f"Normal curve\nμ={mean:.2f}, σ={std:.2f}")
-        ax.axvline(mean, color="#ffcc00", linewidth=1.5, linestyle=":", label=f"Mean = {mean:.2f}")
-        ax.legend(facecolor="#2a2a2a", edgecolor="#444", labelcolor="white", fontsize=9)
+        ax.plot(x, p, color="black", linewidth=2, linestyle="--", label=f"Normal curve\nμ={mean:.2f}, σ={std:.2f}")
+        ax.axvline(mean, color="black", linewidth=2, linestyle=":", label=f"Mean = {mean:.2f}")
+        ax.legend(fontsize=9)
 
-    ax.set_title(title, color="white", fontsize=13, fontweight="bold", pad=12)
-    ax.set_xlabel(xlabel, color="#aaaaaa", fontsize=10)
-    ax.set_ylabel("Density", color="#aaaaaa", fontsize=10)
-    ax.tick_params(colors="#888888")
-    for spine in ax.spines.values():
-        spine.set_edgecolor("#333333")
+    ax.set_title(title, fontsize=13, fontweight="bold", pad=12)
+    ax.set_xlabel(xlabel, fontsize=10)
+    ax.set_ylabel("Density", fontsize=10)
 
     plt.tight_layout()
-    plt.savefig(outputPath, dpi=150, facecolor=fig.get_facecolor())
+    plt.savefig(outputPath, dpi=150)
     plt.close()
     print(f"  Saved: {outputPath}")
 
@@ -112,8 +107,6 @@ def plotCombinedHistograms(
         colours: List of colours per simulation.
     """
     fig, ax = plt.subplots(figsize=(12, 6))
-    fig.patch.set_facecolor("#0f0f0f")
-    ax.set_facecolor("#1a1a1a")
 
     patches = []
     for i, (simName, values) in enumerate(dataBySimulation.items()):
@@ -121,24 +114,20 @@ def plotCombinedHistograms(
             continue
         colour = colours[i % len(colours)]
         ax.hist(values, bins=12, density=True, color=colour, alpha=0.45,
-                edgecolor="#0f0f0f", linewidth=0.5)
+                edgecolor="white", linewidth=0.5)
         mu, std = np.mean(values), np.std(values)
         if std > 0:
             x = np.linspace(min(values) - std, max(values) + std, 300)
             ax.plot(x, norm.pdf(x, mu, std), color=colour, linewidth=2)
         patches.append(mpatches.Patch(color=colour, label=simName, alpha=0.75))
 
-    ax.legend(handles=patches, facecolor="#2a2a2a", edgecolor="#444",
-              labelcolor="white", fontsize=8, loc="upper right")
-    ax.set_title(title, color="white", fontsize=13, fontweight="bold", pad=12)
-    ax.set_xlabel(xlabel, color="#aaaaaa", fontsize=10)
-    ax.set_ylabel("Density", color="#aaaaaa", fontsize=10)
-    ax.tick_params(colors="#888888")
-    for spine in ax.spines.values():
-        spine.set_edgecolor("#333333")
+    ax.legend(handles=patches, fontsize=8, loc="upper right")
+    ax.set_title(title, fontsize=13, fontweight="bold", pad=12)
+    ax.set_xlabel(xlabel, fontsize=10)
+    ax.set_ylabel("Density", fontsize=10)
 
     plt.tight_layout()
-    plt.savefig(outputPath, dpi=150, facecolor=fig.get_facecolor())
+    plt.savefig(outputPath, dpi=150)
     plt.close()
     print(f"  Saved: {outputPath}")
 
@@ -157,7 +146,7 @@ def main():
     recoveryRows = readCsv(recoveryPath)
 
     simNames = list(dict.fromkeys(row["Simulation"] for row in rawRows))
-    colours = ["#4fc3f7", "#ff6b6b", "#69db7c", "#ffd43b", "#cc5de8"]
+    colours = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
     severityBySim = {n: [] for n in simNames}
     recoveryBySim = {n: [] for n in simNames}
