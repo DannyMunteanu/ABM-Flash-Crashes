@@ -32,7 +32,7 @@ class Order:
         """
         self._orderId: int = orderId
         self._sequenceNumber: int = sequenceNumber
-        self._side: str = side  # "buy" or "sell"
+        self._side: str = side
         self._price: Decimal = price
         self._size: int = size
         self._agent: AgentParent = agent

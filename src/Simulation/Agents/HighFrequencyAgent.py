@@ -45,16 +45,16 @@ class HighFrequencyAgent(AgentParent):
         self._bufferBeforeReachingCap = int(bufferBeforeReachingCap)
         self._downtrendWindow = int(downtrendWindow)
 
-    def _cancelQuotes(self, logOrderBook):
+    def _cancelQuotes(self, limitOrderBook):
         """
         Cancels any active bid or ask orders previously submitted by the agent.
         Parameters:
-            logOrderBook: Instance of LimitOrderBook used to cancel orders.
+            limitOrderBook: Instance of LimitOrderBook used to cancel orders.
         """
         for attribute in ["_orderIdBid", "_orderIdAsk"]:
             orderId = getattr(self, attribute)
             if orderId is not None:
-                logOrderBook.cancelOrder(orderId)
+                limitOrderBook.cancelOrder(orderId)
                 setattr(self, attribute, None)
 
     def _shouldTrade(self) -> bool:
@@ -107,11 +107,11 @@ class HighFrequencyAgent(AgentParent):
         askSize = min(tradeNum, max(0, int(self.quantity)))
         return bidSize, askSize
 
-    def _submitOrders(self, logOrderBook, bid, ask, bidSize, askSize, timeTick):
+    def _submitOrders(self, limitOrderBook, bid, ask, bidSize, askSize, timeTick):
         """
         Submits limit orders to the order book using the calculated prices and sizes.
         Parameters:
-            logOrderBook: Instance of LimitOrderBook used to submit orders.
+            limitOrderBook: Instance of LimitOrderBook used to submit orders.
             bid: Price of the bid order.
             ask: Price of the ask order.
             bidSize: Quantity of the bid order.
@@ -119,9 +119,9 @@ class HighFrequencyAgent(AgentParent):
             timeTick: Current point in time for the simulation.
         """
         if bidSize > 0 and Decimal(str(self._cash)) >= bid * Decimal(bidSize):
-            self._orderIdBid = logOrderBook.submitLimitOrder("buy", bid, bidSize, self, timeTick)
+            self._orderIdBid = limitOrderBook.submitLimitOrder("buy", bid, bidSize, self, timeTick)
         if askSize > 0:
-            self._orderIdAsk = logOrderBook.submitLimitOrder("sell", ask, askSize, self, timeTick)
+            self._orderIdAsk = limitOrderBook.submitLimitOrder("sell", ask, askSize, self, timeTick)
 
     def _isInDowntrend(self, market) -> bool:
         """
@@ -151,7 +151,7 @@ class HighFrequencyAgent(AgentParent):
             and priceHistory[-1] > priceHistory[-self._downtrendWindow]
         )
 
-    def step(self, market, logOrderBook, timeTick):
+    def step(self, market, limitOrderBook, timeTick):
         """
         Step is called at the current simulation time step, when the HighFrequencyAgent executes its trading strategy.
         Places limit orders around the current market price and adjusts its behaviour based on inventory levels.
@@ -159,7 +159,7 @@ class HighFrequencyAgent(AgentParent):
         During a detected uptrend the agent posts maximum bid size at mid-price to actively drive price recovery.
         Parameters:
             market: Instance of Market that provides the current market price.
-            logOrderBook: Instance of LimitOrderBook used to submit and cancel orders.
+            limitOrderBook: Instance of LimitOrderBook used to submit and cancel orders.
             timeTick: Current point in time for the simulation.
         """
         if not self._shouldTrade():
@@ -167,18 +167,18 @@ class HighFrequencyAgent(AgentParent):
         if market.price is None:
             return
         midPrice = Decimal(str(market.price))
-        bestAsk = logOrderBook.bestAsk()
-        bestBid = logOrderBook.bestBid()
+        bestAsk = limitOrderBook.bestAsk()
+        bestBid = limitOrderBook.bestBid()
         if bestAsk is None or bestBid is None:
             return
-        if self._needsToSell(logOrderBook, timeTick):
+        if self._needsToSell(limitOrderBook, timeTick):
             return
         inUptrend = self._isInUptrend(market)
         bidSize, askSize = self._calculateSizes()
-        self._cancelQuotes(logOrderBook)
+        self._cancelQuotes(limitOrderBook)
         if self._isInDowntrend(market):
             bidSize = 0
         elif inUptrend:
             bidSize = min(self._maxTradeNum, max(0, self._inventoryCap - int(self.quantity)))
         bid, ask = self._calculateBidAsk(midPrice, aggressive=inUptrend)
-        self._submitOrders(logOrderBook, bid, ask, bidSize, askSize, timeTick)
+        self._submitOrders(limitOrderBook, bid, ask, bidSize, askSize, timeTick)
