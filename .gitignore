@@ -1,8 +1,4 @@
-# Local IDE settings
 .idea
-
-# For MAC OSX
 .DS_Store
-
 __pycache__/
 *.pyc

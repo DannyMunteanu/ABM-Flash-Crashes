@@ -1,0 +1,501 @@
+Simulation,Seed,Crash Severity (%),Recovery Time (Ticks),Recovered
+Baseline Model,3,3.93,31,1
+Baseline Model,2,10.58,113,1
+Baseline Model,0,9.14,92,1
+Baseline Model,6,9.7,104,1
+Baseline Model,1,8.61,90,1
+Baseline Model,7,8.84,97,1
+Baseline Model,4,8.47,86,1
+Baseline Model,5,8.5,124,1
+Baseline Model,12,8.29,106,1
+Baseline Model,8,9.04,96,1
+Baseline Model,9,8.49,87,1
+Baseline Model,10,7.88,116,1
+Baseline Model,11,9.17,111,1
+Baseline Model,13,8.45,97,1
+Baseline Model,14,8.98,109,1
+Baseline Model,15,9.4,121,1
+Baseline Model,16,6.28,61,1
+Baseline Model,17,8.03,88,1
+Baseline Model,19,9.34,90,1
+Baseline Model,18,8.39,90,1
+Baseline Model,20,7.82,78,1
+Baseline Model,23,9.01,116,1
+Baseline Model,22,6.84,72,1
+Baseline Model,21,7.67,86,1
+Baseline Model,26,9.06,114,1
+Baseline Model,25,8.86,101,1
+Baseline Model,24,8.7,101,1
+Baseline Model,27,6.6,84,1
+Baseline Model,29,7.38,65,1
+Baseline Model,31,9.47,87,1
+Baseline Model,28,8.1,77,1
+Baseline Model,30,8.98,101,1
+Baseline Model,32,8.18,90,1
+Baseline Model,33,8.65,105,1
+Baseline Model,36,7.73,110,1
+Baseline Model,35,8.41,101,1
+Baseline Model,37,6.9,87,1
+Baseline Model,34,8.53,95,1
+Baseline Model,38,7.11,86,1
+Baseline Model,39,8.22,124,1
+Baseline Model,40,9.03,105,1
+Baseline Model,42,5.12,47,1
+Baseline Model,43,8.14,81,1
+Baseline Model,41,9.61,104,1
+Baseline Model,44,9.13,90,1
+Baseline Model,45,8.44,92,1
+Baseline Model,47,8.54,96,1
+Baseline Model,46,9.0,106,1
+Baseline Model,48,9.63,101,1
+Baseline Model,49,8.78,117,1
+Baseline Model,51,9.08,113,1
+Baseline Model,50,8.22,88,1
+Baseline Model,52,8.72,121,1
+Baseline Model,53,7.2,81,1
+Baseline Model,54,8.63,123,1
+Baseline Model,55,9.13,112,1
+Baseline Model,56,9.42,106,1
+Baseline Model,57,7.03,90,1
+Baseline Model,58,9.09,118,1
+Baseline Model,60,8.72,117,1
+Baseline Model,59,3.9,70,1
+Baseline Model,61,8.75,88,1
+Baseline Model,62,8.92,84,1
+Baseline Model,63,6.19,52,1
+Baseline Model,64,8.12,80,1
+Baseline Model,65,8.44,94,1
+Baseline Model,66,9.1,123,1
+Baseline Model,67,8.76,92,1
+Baseline Model,70,7.0,78,1
+Baseline Model,68,8.54,124,1
+Baseline Model,69,9.37,105,1
+Baseline Model,71,7.95,77,1
+Baseline Model,72,9.28,103,1
+Baseline Model,73,8.81,89,1
+Baseline Model,74,8.72,66,1
+Baseline Model,75,8.58,73,1
+Baseline Model,76,7.81,79,1
+Baseline Model,77,9.42,80,1
+Baseline Model,78,8.71,116,1
+Baseline Model,79,8.4,93,1
+Baseline Model,80,6.93,72,1
+Baseline Model,81,9.55,122,1
+Baseline Model,82,9.41,96,1
+Baseline Model,84,6.63,58,1
+Baseline Model,83,9.57,109,1
+Baseline Model,85,8.95,89,1
+Baseline Model,86,8.25,75,1
+Baseline Model,87,8.44,94,1
+Baseline Model,88,9.54,106,1
+Baseline Model,89,7.7,93,1
+Baseline Model,90,8.56,88,1
+Baseline Model,91,8.76,124,1
+Baseline Model,92,8.6,112,1
+Baseline Model,93,8.93,94,1
+Baseline Model,94,9.62,111,1
+Baseline Model,95,6.62,86,1
+Baseline Model,96,8.11,86,1
+Baseline Model,97,8.91,96,1
+Baseline Model,98,8.77,125,1
+Baseline Model,99,6.02,90,1
+Baseline Model with HFT,0,6.79,97,1
+Baseline Model with HFT,1,5.34,90,1
+Baseline Model with HFT,2,5.36,101,1
+Baseline Model with HFT,3,8.53,102,1
+Baseline Model with HFT,4,4.51,88,1
+Baseline Model with HFT,5,6.86,89,1
+Baseline Model with HFT,6,4.26,74,1
+Baseline Model with HFT,7,7.35,119,1
+Baseline Model with HFT,9,5.7,131,1
+Baseline Model with HFT,8,5.83,65,1
+Baseline Model with HFT,11,6.5,112,1
+Baseline Model with HFT,10,8.12,87,1
+Baseline Model with HFT,12,8.63,95,1
+Baseline Model with HFT,13,4.66,98,1
+Baseline Model with HFT,15,5.18,67,1
+Baseline Model with HFT,14,5.92,102,1
+Baseline Model with HFT,16,7.12,78,1
+Baseline Model with HFT,17,5.74,93,1
+Baseline Model with HFT,18,5.85,90,1
+Baseline Model with HFT,19,9.01,114,1
+Baseline Model with HFT,20,6.01,67,1
+Baseline Model with HFT,21,8.06,69,1
+Baseline Model with HFT,22,8.85,91,1
+Baseline Model with HFT,23,8.28,104,1
+Baseline Model with HFT,24,5.44,74,1
+Baseline Model with HFT,25,8.98,111,1
+Baseline Model with HFT,26,7.35,99,1
+Baseline Model with HFT,27,6.57,89,1
+Baseline Model with HFT,28,8.4,100,1
+Baseline Model with HFT,29,5.85,64,1
+Baseline Model with HFT,31,5.59,95,1
+Baseline Model with HFT,30,6.11,128,1
+Baseline Model with HFT,32,8.67,101,1
+Baseline Model with HFT,33,8.48,94,1
+Baseline Model with HFT,34,8.24,97,1
+Baseline Model with HFT,35,7.26,120,1
+Baseline Model with HFT,36,5.06,65,1
+Baseline Model with HFT,37,7.99,82,1
+Baseline Model with HFT,38,9.48,119,1
+Baseline Model with HFT,39,7.76,114,1
+Baseline Model with HFT,41,5.17,94,1
+Baseline Model with HFT,40,7.83,104,1
+Baseline Model with HFT,42,7.78,94,1
+Baseline Model with HFT,43,3.79,49,1
+Baseline Model with HFT,44,6.01,87,1
+Baseline Model with HFT,45,8.66,103,1
+Baseline Model with HFT,47,6.21,83,1
+Baseline Model with HFT,46,5.59,70,1
+Baseline Model with HFT,49,5.67,66,1
+Baseline Model with HFT,48,3.85,69,1
+Baseline Model with HFT,50,9.41,100,1
+Baseline Model with HFT,51,8.28,83,1
+Baseline Model with HFT,52,8.62,85,1
+Baseline Model with HFT,53,6.16,70,1
+Baseline Model with HFT,54,6.81,78,1
+Baseline Model with HFT,55,7.67,97,1
+Baseline Model with HFT,56,4.92,73,1
+Baseline Model with HFT,57,6.57,105,1
+Baseline Model with HFT,59,6.73,80,1
+Baseline Model with HFT,58,6.42,102,1
+Baseline Model with HFT,60,7.71,132,1
+Baseline Model with HFT,61,4.96,90,1
+Baseline Model with HFT,62,4.92,61,1
+Baseline Model with HFT,63,7.1,82,1
+Baseline Model with HFT,65,5.17,65,1
+Baseline Model with HFT,64,7.34,79,1
+Baseline Model with HFT,66,6.3,99,1
+Baseline Model with HFT,67,5.89,85,1
+Baseline Model with HFT,68,7.72,81,1
+Baseline Model with HFT,69,6.0,88,1
+Baseline Model with HFT,70,6.86,79,1
+Baseline Model with HFT,71,8.29,91,1
+Baseline Model with HFT,73,6.82,80,1
+Baseline Model with HFT,72,4.25,80,1
+Baseline Model with HFT,74,8.36,82,1
+Baseline Model with HFT,75,8.3,91,1
+Baseline Model with HFT,76,8.47,87,1
+Baseline Model with HFT,77,5.78,106,1
+Baseline Model with HFT,78,8.86,83,1
+Baseline Model with HFT,79,6.36,92,1
+Baseline Model with HFT,80,6.01,76,1
+Baseline Model with HFT,83,0.64,94,1
+Baseline Model with HFT,82,6.12,102,1
+Baseline Model with HFT,81,8.02,103,1
+Baseline Model with HFT,84,6.9,89,1
+Baseline Model with HFT,85,5.66,74,1
+Baseline Model with HFT,86,5.49,89,1
+Baseline Model with HFT,87,8.03,76,1
+Baseline Model with HFT,88,7.93,91,1
+Baseline Model with HFT,89,7.75,109,1
+Baseline Model with HFT,90,7.25,99,1
+Baseline Model with HFT,91,8.2,88,1
+Baseline Model with HFT,92,5.38,109,1
+Baseline Model with HFT,93,5.21,83,1
+Baseline Model with HFT,94,6.34,83,1
+Baseline Model with HFT,95,5.94,90,1
+Baseline Model with HFT,97,5.62,97,1
+Baseline Model with HFT,99,5.14,69,1
+Baseline Model with HFT,98,8.29,115,1
+Baseline Model with HFT,96,7.55,77,1
+Baseline Model with Momentum,0,4.54,47,1
+Baseline Model with Momentum,1,8.26,117,1
+Baseline Model with Momentum,2,8.66,106,1
+Baseline Model with Momentum,3,7.91,79,1
+Baseline Model with Momentum,4,8.65,92,1
+Baseline Model with Momentum,5,9.23,113,1
+Baseline Model with Momentum,6,9.09,109,1
+Baseline Model with Momentum,7,8.3,82,1
+Baseline Model with Momentum,8,8.24,88,1
+Baseline Model with Momentum,10,8.21,109,1
+Baseline Model with Momentum,9,9.13,93,1
+Baseline Model with Momentum,11,8.43,78,1
+Baseline Model with Momentum,12,7.31,79,1
+Baseline Model with Momentum,13,8.22,101,1
+Baseline Model with Momentum,14,8.06,77,1
+Baseline Model with Momentum,15,8.13,97,1
+Baseline Model with Momentum,16,6.25,77,1
+Baseline Model with Momentum,18,8.29,83,1
+Baseline Model with Momentum,17,7.54,96,1
+Baseline Model with Momentum,19,9.24,106,1
+Baseline Model with Momentum,20,7.65,80,1
+Baseline Model with Momentum,23,6.43,106,1
+Baseline Model with Momentum,22,8.69,90,1
+Baseline Model with Momentum,21,8.89,126,1
+Baseline Model with Momentum,24,8.31,104,1
+Baseline Model with Momentum,25,8.19,87,1
+Baseline Model with Momentum,26,8.37,70,1
+Baseline Model with Momentum,27,5.87,71,1
+Baseline Model with Momentum,28,8.65,111,1
+Baseline Model with Momentum,29,8.04,75,1
+Baseline Model with Momentum,30,8.69,93,1
+Baseline Model with Momentum,31,7.51,88,1
+Baseline Model with Momentum,34,9.18,83,1
+Baseline Model with Momentum,32,9.09,119,1
+Baseline Model with Momentum,33,8.8,66,1
+Baseline Model with Momentum,35,8.72,100,1
+Baseline Model with Momentum,36,9.03,131,1
+Baseline Model with Momentum,38,8.87,107,1
+Baseline Model with Momentum,40,6.01,75,1
+Baseline Model with Momentum,37,8.68,112,1
+Baseline Model with Momentum,41,9.05,95,1
+Baseline Model with Momentum,39,8.32,113,1
+Baseline Model with Momentum,42,9.34,105,1
+Baseline Model with Momentum,43,8.91,92,1
+Baseline Model with Momentum,44,8.82,122,1
+Baseline Model with Momentum,46,8.78,95,1
+Baseline Model with Momentum,45,8.9,106,1
+Baseline Model with Momentum,47,8.92,75,1
+Baseline Model with Momentum,50,8.08,87,1
+Baseline Model with Momentum,49,9.39,106,1
+Baseline Model with Momentum,48,8.36,112,1
+Baseline Model with Momentum,51,9.9,141,1
+Baseline Model with Momentum,52,7.8,98,1
+Baseline Model with Momentum,54,8.86,102,1
+Baseline Model with Momentum,56,8.65,92,1
+Baseline Model with Momentum,57,5.89,54,1
+Baseline Model with Momentum,53,9.04,84,1
+Baseline Model with Momentum,55,7.75,83,1
+Baseline Model with Momentum,58,6.71,75,1
+Baseline Model with Momentum,59,8.18,101,1
+Baseline Model with Momentum,60,5.76,53,1
+Baseline Model with Momentum,65,7.08,70,1
+Baseline Model with Momentum,61,8.08,94,1
+Baseline Model with Momentum,64,7.97,100,1
+Baseline Model with Momentum,63,8.0,87,1
+Baseline Model with Momentum,66,5.25,53,1
+Baseline Model with Momentum,62,8.94,86,1
+Baseline Model with Momentum,67,7.3,87,1
+Baseline Model with Momentum,68,8.24,70,1
+Baseline Model with Momentum,69,8.43,98,1
+Baseline Model with Momentum,72,8.97,79,1
+Baseline Model with Momentum,70,9.06,97,1
+Baseline Model with Momentum,74,9.62,125,1
+Baseline Model with Momentum,71,8.91,109,1
+Baseline Model with Momentum,73,8.11,101,1
+Baseline Model with Momentum,75,9.67,105,1
+Baseline Model with Momentum,81,5.52,38,1
+Baseline Model with Momentum,76,8.79,85,1
+Baseline Model with Momentum,77,8.62,93,1
+Baseline Model with Momentum,78,9.06,111,1
+Baseline Model with Momentum,79,6.77,72,1
+Baseline Model with Momentum,80,9.03,127,1
+Baseline Model with Momentum,82,8.23,109,1
+Baseline Model with Momentum,85,5.45,59,1
+Baseline Model with Momentum,83,9.1,130,1
+Baseline Model with Momentum,84,7.04,82,1
+Baseline Model with Momentum,86,7.46,87,1
+Baseline Model with Momentum,87,8.76,248,1
+Baseline Model with Momentum,89,7.71,83,1
+Baseline Model with Momentum,88,11.1,123,1
+Baseline Model with Momentum,90,8.67,102,1
+Baseline Model with Momentum,92,8.11,128,1
+Baseline Model with Momentum,91,7.58,102,1
+Baseline Model with Momentum,93,9.43,102,1
+Baseline Model with Momentum,94,9.28,123,1
+Baseline Model with Momentum,95,9.46,118,1
+Baseline Model with Momentum,97,9.1,116,1
+Baseline Model with Momentum,96,8.67,109,1
+Baseline Model with Momentum,98,7.99,84,1
+Baseline Model with Momentum,100,9.07,96,1
+Baseline Model With Stop Loss,1,9.5,117,1
+Baseline Model With Stop Loss,0,8.72,116,1
+Baseline Model With Stop Loss,4,8.24,98,1
+Baseline Model With Stop Loss,2,8.91,112,1
+Baseline Model With Stop Loss,3,8.01,100,1
+Baseline Model With Stop Loss,5,8.33,95,1
+Baseline Model With Stop Loss,6,8.82,90,1
+Baseline Model With Stop Loss,8,8.94,116,1
+Baseline Model With Stop Loss,7,8.2,105,1
+Baseline Model With Stop Loss,11,8.03,95,1
+Baseline Model With Stop Loss,9,8.22,99,1
+Baseline Model With Stop Loss,10,9.37,121,1
+Baseline Model With Stop Loss,12,8.42,88,1
+Baseline Model With Stop Loss,13,7.56,108,1
+Baseline Model With Stop Loss,14,8.24,110,1
+Baseline Model With Stop Loss,15,6.83,100,1
+Baseline Model With Stop Loss,16,9.07,77,1
+Baseline Model With Stop Loss,18,6.21,60,1
+Baseline Model With Stop Loss,17,7.76,88,1
+Baseline Model With Stop Loss,19,8.9,112,1
+Baseline Model With Stop Loss,20,8.78,110,1
+Baseline Model With Stop Loss,21,8.35,83,1
+Baseline Model With Stop Loss,22,7.9,107,1
+Baseline Model With Stop Loss,23,8.75,115,1
+Baseline Model With Stop Loss,24,8.62,88,1
+Baseline Model With Stop Loss,25,8.81,112,1
+Baseline Model With Stop Loss,26,8.45,103,1
+Baseline Model With Stop Loss,27,7.98,86,1
+Baseline Model With Stop Loss,28,7.7,101,1
+Baseline Model With Stop Loss,29,9.04,133,1
+Baseline Model With Stop Loss,30,8.29,90,1
+Baseline Model With Stop Loss,32,6.68,74,1
+Baseline Model With Stop Loss,31,9.43,113,1
+Baseline Model With Stop Loss,33,7.86,100,1
+Baseline Model With Stop Loss,34,8.79,92,1
+Baseline Model With Stop Loss,35,7.09,73,1
+Baseline Model With Stop Loss,37,8.49,99,1
+Baseline Model With Stop Loss,36,8.01,82,1
+Baseline Model With Stop Loss,38,9.12,118,1
+Baseline Model With Stop Loss,40,8.53,89,1
+Baseline Model With Stop Loss,39,8.18,66,1
+Baseline Model With Stop Loss,41,5.78,72,1
+Baseline Model With Stop Loss,43,7.22,84,1
+Baseline Model With Stop Loss,42,8.75,86,1
+Baseline Model With Stop Loss,45,8.87,87,1
+Baseline Model With Stop Loss,44,8.96,95,1
+Baseline Model With Stop Loss,46,8.7,104,1
+Baseline Model With Stop Loss,47,7.67,84,1
+Baseline Model With Stop Loss,48,8.69,95,1
+Baseline Model With Stop Loss,49,9.12,102,1
+Baseline Model With Stop Loss,50,5.94,80,1
+Baseline Model With Stop Loss,51,8.89,115,1
+Baseline Model With Stop Loss,53,8.58,73,1
+Baseline Model With Stop Loss,52,7.12,96,1
+Baseline Model With Stop Loss,54,6.01,76,1
+Baseline Model With Stop Loss,56,7.55,83,1
+Baseline Model With Stop Loss,55,7.96,120,1
+Baseline Model With Stop Loss,57,8.75,84,1
+Baseline Model With Stop Loss,59,6.38,83,1
+Baseline Model With Stop Loss,60,6.49,80,1
+Baseline Model With Stop Loss,58,9.15,110,1
+Baseline Model With Stop Loss,61,9.08,97,1
+Baseline Model With Stop Loss,62,9.22,110,1
+Baseline Model With Stop Loss,63,8.21,82,1
+Baseline Model With Stop Loss,64,8.72,103,1
+Baseline Model With Stop Loss,65,9.05,94,1
+Baseline Model With Stop Loss,66,7.88,121,1
+Baseline Model With Stop Loss,68,7.09,84,1
+Baseline Model With Stop Loss,69,9.41,97,1
+Baseline Model With Stop Loss,67,8.49,100,1
+Baseline Model With Stop Loss,71,8.84,91,1
+Baseline Model With Stop Loss,70,7.88,106,1
+Baseline Model With Stop Loss,72,7.17,66,1
+Baseline Model With Stop Loss,73,9.07,94,1
+Baseline Model With Stop Loss,74,7.45,73,1
+Baseline Model With Stop Loss,75,8.12,83,1
+Baseline Model With Stop Loss,76,8.22,105,1
+Baseline Model With Stop Loss,77,10.33,117,1
+Baseline Model With Stop Loss,79,6.46,66,1
+Baseline Model With Stop Loss,78,8.39,114,1
+Baseline Model With Stop Loss,80,7.09,90,1
+Baseline Model With Stop Loss,81,8.77,80,1
+Baseline Model With Stop Loss,82,9.21,87,1
+Baseline Model With Stop Loss,83,8.16,99,1
+Baseline Model With Stop Loss,85,9.29,109,1
+Baseline Model With Stop Loss,84,8.63,150,1
+Baseline Model With Stop Loss,87,7.85,87,1
+Baseline Model With Stop Loss,86,7.42,90,1
+Baseline Model With Stop Loss,88,7.28,101,1
+Baseline Model With Stop Loss,89,9.03,101,1
+Baseline Model With Stop Loss,90,8.36,157,1
+Baseline Model With Stop Loss,91,8.15,107,1
+Baseline Model With Stop Loss,92,7.14,82,1
+Baseline Model With Stop Loss,93,8.25,115,1
+Baseline Model With Stop Loss,95,5.34,51,1
+Baseline Model With Stop Loss,94,8.59,112,1
+Baseline Model With Stop Loss,96,7.48,83,1
+Baseline Model With Stop Loss,97,9.07,137,1
+Baseline Model With Stop Loss,98,7.97,91,1
+Baseline Model With Stop Loss,101,8.32,111,1
+Full Market,1,5.34,99,1
+Full Market,0,7.04,100,1
+Full Market,4,6.64,104,1
+Full Market,6,5.15,166,1
+Full Market,3,7.9,139,1
+Full Market,2,9.57,121,1
+Full Market,5,5.11,100,1
+Full Market,7,8.05,125,1
+Full Market,10,4.55,92,1
+Full Market,8,5.72,80,1
+Full Market,12,5.46,102,1
+Full Market,11,7.19,78,1
+Full Market,9,9.26,148,1
+Full Market,13,7.35,94,1
+Full Market,15,5.36,,0
+Full Market,14,6.24,89,1
+Full Market,17,5.22,94,1
+Full Market,20,6.38,66,1
+Full Market,16,7.78,127,1
+Full Market,18,6.69,86,1
+Full Market,21,5.92,81,1
+Full Market,22,7.55,110,1
+Full Market,23,7.85,129,1
+Full Market,19,8.28,112,1
+Full Market,24,7.23,192,1
+Full Market,26,5.46,342,1
+Full Market,27,4.6,47,1
+Full Market,25,7.39,132,1
+Full Market,28,5.56,94,1
+Full Market,29,7.07,113,1
+Full Market,30,5.62,84,1
+Full Market,31,11.05,167,1
+Full Market,33,5.96,84,1
+Full Market,32,6.4,94,1
+Full Market,34,7.27,130,1
+Full Market,35,5.83,101,1
+Full Market,37,5.55,90,1
+Full Market,36,6.36,114,1
+Full Market,40,5.84,75,1
+Full Market,38,7.06,133,1
+Full Market,39,8.16,129,1
+Full Market,41,8.09,108,1
+Full Market,42,5.71,101,1
+Full Market,43,5.78,127,1
+Full Market,46,6.42,70,1
+Full Market,44,6.04,168,1
+Full Market,45,6.47,85,1
+Full Market,47,6.12,88,1
+Full Market,48,6.97,84,1
+Full Market,49,5.12,79,1
+Full Market,52,5.72,72,1
+Full Market,50,5.15,90,1
+Full Market,51,7.03,103,1
+Full Market,53,5.94,91,1
+Full Market,54,8.95,124,1
+Full Market,55,8.65,138,1
+Full Market,56,7.7,117,1
+Full Market,57,4.96,86,1
+Full Market,59,6.81,103,1
+Full Market,58,6.62,83,1
+Full Market,60,7.86,89,1
+Full Market,61,5.97,92,1
+Full Market,62,6.46,80,1
+Full Market,64,4.82,100,1
+Full Market,63,8.69,155,1
+Full Market,67,5.7,62,1
+Full Market,65,7.23,107,1
+Full Market,66,8.02,100,1
+Full Market,69,6.29,106,1
+Full Market,70,6.07,83,1
+Full Market,68,7.74,129,1
+Full Market,71,7.76,113,1
+Full Market,72,4.13,79,1
+Full Market,74,4.71,88,1
+Full Market,73,6.05,79,1
+Full Market,75,7.28,174,1
+Full Market,76,6.19,89,1
+Full Market,78,8.63,123,1
+Full Market,77,7.59,128,1
+Full Market,79,6.6,99,1
+Full Market,80,8.2,99,1
+Full Market,81,4.87,67,1
+Full Market,82,5.92,84,1
+Full Market,83,5.59,88,1
+Full Market,84,8.15,95,1
+Full Market,86,7.37,89,1
+Full Market,85,8.84,99,1
+Full Market,87,8.45,123,1
+Full Market,88,6.74,78,1
+Full Market,89,7.59,109,1
+Full Market,90,7.82,99,1
+Full Market,92,3.98,49,1
+Full Market,95,4.12,44,1
+Full Market,91,8.26,117,1
+Full Market,93,6.12,79,1
+Full Market,94,8.37,119,1
+Full Market,96,4.95,90,1
+Full Market,97,4.27,51,1
+Full Market,98,8.68,119,1
+Full Market,101,7.1,146,1
